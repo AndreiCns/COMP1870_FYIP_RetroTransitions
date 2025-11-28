@@ -8,7 +8,9 @@ public class FirstPersonController : MonoBehaviour
     [Header("References")]
     public Transform playerCamera;
     public Transform weaponHolder;
-    
+    public StyleSwapManager styleSwapManager; // Assign in Inspector
+    public WeaponStyleSwap weaponStyleSwap;   // Assign in Inspector
+
     [Header("Look Settings")]
     public float mouseSensitivity = 50f;
     public float minPitch = -70f;
@@ -43,8 +45,6 @@ public class FirstPersonController : MonoBehaviour
     private Vector3 recoilCurrentRot;
     private Vector3 recoilTargetRot;
 
-    private Animator weaponAnimator;
-
     private CharacterController controller;
     private Vector2 moveInput;
     private Vector2 lookInput;
@@ -55,7 +55,6 @@ public class FirstPersonController : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        weaponAnimator = weaponRecoil.GetComponentInChildren<Animator>();
 
         if (cam == null || playerCamera == null || weaponHolder == null || weaponRecoil == null)
         {
@@ -89,24 +88,15 @@ public class FirstPersonController : MonoBehaviour
         if (!ctx.performed)
             return;
 
-        if (controller.isGrounded)
-        {
+        if (controller.isGrounded || jumpCount < maxJumps)
             Jump();
-        }
-        else if (jumpCount < maxJumps)
-        {
-            Jump();
-        }
     }
 
     public void OnFire(InputAction.CallbackContext ctx)
     {
-        if (!ctx.performed)
-            return;
+        if (!ctx.performed) return;
 
-        // Fire animation
-        if (weaponAnimator != null)
-            weaponAnimator.SetTrigger("Fire");
+        weaponStyleSwap?.Fire();
 
         // Procedural recoil
         recoilTargetPos -= new Vector3(0, 0, recoilKickback);
@@ -122,14 +112,13 @@ public class FirstPersonController : MonoBehaviour
 
         HandleLook(dt);
         HandleMovement(dt);
-        // Visual updates moved to LateUpdate
     }
 
     void LateUpdate()
     {
         float dt = Time.deltaTime;
         HandleWeaponBob(dt);
-        SyncWeaponToCamera();   // weapon follows camera after look/physics
+        SyncWeaponToCamera();
         HandleWeaponRecoil(dt);
     }
 
@@ -144,10 +133,7 @@ public class FirstPersonController : MonoBehaviour
         pitch -= mouseY;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
-        // rotate camera
         playerCamera.localRotation = Quaternion.Euler(pitch, 0f, 0f);
-
-        // rotate player horizontally
         transform.Rotate(Vector3.up * mouseX);
     }
 
@@ -163,11 +149,8 @@ public class FirstPersonController : MonoBehaviour
         }
 
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
-
-        // Update vertical velocity first
         velocity.y += gravity * dt;
 
-        // Combine horizontal movement and vertical velocity into a single Move call
         Vector3 totalMove = (move * moveSpeed) + new Vector3(0f, velocity.y, 0f);
         controller.Move(totalMove * dt);
     }
@@ -176,7 +159,6 @@ public class FirstPersonController : MonoBehaviour
     {
         velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         jumpCount++;
-
         StartCoroutine(FOVKick());
     }
 
@@ -211,7 +193,6 @@ public class FirstPersonController : MonoBehaviour
     // ---------------------------------
     void HandleWeaponBob(float dt)
     {
-        // use sqrMagnitude to avoid sqrt every frame
         if (moveInput.sqrMagnitude > 0.01f && controller.isGrounded)
         {
             bobTimer += dt * bobSpeed;
@@ -233,22 +214,16 @@ public class FirstPersonController : MonoBehaviour
 
     void HandleWeaponRecoil(float dt)
     {
-        // Smooth position
         recoilCurrentPos = Vector3.Lerp(recoilCurrentPos, recoilTargetPos, dt * recoilRecovery);
         weaponRecoil.localPosition = recoilCurrentPos;
 
-        // Smooth rotation
         recoilCurrentRot = Vector3.Lerp(recoilCurrentRot, recoilTargetRot, dt * recoilRecovery);
         weaponRecoil.localRotation = Quaternion.Euler(recoilCurrentRot);
 
-        // Gradually reset recoil target
         recoilTargetPos = Vector3.Lerp(recoilTargetPos, Vector3.zero, dt * recoilRecovery);
         recoilTargetRot = Vector3.Lerp(recoilTargetRot, Vector3.zero, dt * recoilRecovery);
     }
 
-    // ---------------------------------
-    // NEW: WEAPON FOLLOWS CAMERA ROTATION
-    // ---------------------------------
     void SyncWeaponToCamera()
     {
         weaponHolder.rotation = playerCamera.rotation;

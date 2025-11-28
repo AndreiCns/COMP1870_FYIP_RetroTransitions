@@ -208,7 +208,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 23242684c461ca44689b0e22fe1e5c9c, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -621,6 +621,8 @@ GameObject:
   - component: {fileID: 686592340}
   - component: {fileID: 686592339}
   - component: {fileID: 686592342}
+  - component: {fileID: 686592343}
+  - component: {fileID: 686592344}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -642,6 +644,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 564892753}
   weaponHolder: {fileID: 307239710}
+  styleSwapManager: {fileID: 686592344}
+  weaponStyleSwap: {fileID: 686592343}
   mouseSensitivity: 50
   minPitch: -70
   maxPitch: 70
@@ -849,11 +853,56 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 9caa3d8a-6b2f-4e8e-8bad-6ede561bd9be
     m_ActionName: UI/TrackedDeviceOrientation
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 686592344}
+        m_TargetAssemblyTypeName: StyleSwapManager, Assembly-CSharp
+        m_MethodName: ToggleStyle
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 5a516188-05b5-4b9d-b898-b0bcc154f88c
+    m_ActionName: 'Player/StyleSwap[/Keyboard/t]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: Keyboard&Mouse
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 564892756}
+--- !u!114 &686592343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686592338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89f161988bb712e4c8a692f608e1f65a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  modernWeapon: {fileID: 1100364813}
+  retroWeapon: {fileID: 1126358879}
+  styleSwapEvent: {fileID: 11400000, guid: bda64b4573b6e7a4a8a0a642242f2982, type: 2}
+--- !u!114 &686592344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686592338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69d4c61ab5f61d44bb1810d4749c6c55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  styleSwapEvent: {fileID: 11400000, guid: bda64b4573b6e7a4a8a0a642242f2982, type: 2}
+  toggleStyleAction: {fileID: -2016792750424387380, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!1 &1014404819
 GameObject:
   m_ObjectHideFlags: 0
@@ -969,6 +1018,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2461351824233870761, guid: e6eaa3eb0c292cf4eb5f29d10ce0af0c, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: cb887bb8de4611b44a34bb5c6217accc, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

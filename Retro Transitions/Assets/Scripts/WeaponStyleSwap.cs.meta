@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 89f161988bb712e4c8a692f608e1f65a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - modernWeapon: {fileID: 919132149155446097, guid: 23242684c461ca44689b0e22fe1e5c9c, type: 3}
+  - retroWeapon: {fileID: 919132149155446097, guid: e6eaa3eb0c292cf4eb5f29d10ce0af0c, type: 3}
+  - styleSwapEvent: {fileID: 11400000, guid: bda64b4573b6e7a4a8a0a642242f2982, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

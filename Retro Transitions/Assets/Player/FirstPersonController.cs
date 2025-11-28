@@ -8,9 +8,7 @@ public class FirstPersonController : MonoBehaviour
     [Header("References")]
     public Transform playerCamera;
     public Transform weaponHolder;
-    public float cameraShakeAmount = 0.2f;
-    public float cameraShakeDuration = 0.05f;
-
+    
     [Header("Look Settings")]
     public float mouseSensitivity = 50f;
     public float minPitch = -70f;
@@ -34,6 +32,19 @@ public class FirstPersonController : MonoBehaviour
     private float bobTimer = 0f;
     private Vector3 weaponHolderInitialLocalPos;
 
+    [Header("Weapon Recoil")]
+    public Transform weaponRecoil;
+    public float recoilKickback = 0.15f;
+    public float recoilUp = 6f;
+    public float recoilRecovery = 12f;
+
+    private Vector3 recoilCurrentPos;
+    private Vector3 recoilTargetPos;
+    private Vector3 recoilCurrentRot;
+    private Vector3 recoilTargetRot;
+
+    private Animator weaponAnimator;
+
     private CharacterController controller;
     private Vector2 moveInput;
     private Vector2 lookInput;
@@ -44,6 +55,15 @@ public class FirstPersonController : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        weaponAnimator = weaponRecoil.GetComponentInChildren<Animator>();
+
+        if (cam == null || playerCamera == null || weaponHolder == null || weaponRecoil == null)
+        {
+            Debug.LogError($"FirstPersonController on '{gameObject.name}' is missing required references.");
+            enabled = false;
+            return;
+        }
+
         defaultFOV = cam.fieldOfView;
         weaponHolderInitialLocalPos = weaponHolder.localPosition;
 
@@ -81,10 +101,16 @@ public class FirstPersonController : MonoBehaviour
 
     public void OnFire(InputAction.CallbackContext ctx)
     {
-        if (ctx.performed)
-        {
-            StartCoroutine(DoCameraShake());
-        }
+        if (!ctx.performed)
+            return;
+
+        // Fire animation
+        if (weaponAnimator != null)
+            weaponAnimator.SetTrigger("Fire");
+
+        // Procedural recoil
+        recoilTargetPos -= new Vector3(0, 0, recoilKickback);
+        recoilTargetRot += new Vector3(-recoilUp, 0, 0);
     }
 
     // ---------------------------------
@@ -92,19 +118,28 @@ public class FirstPersonController : MonoBehaviour
     // ---------------------------------
     void Update()
     {
-        HandleLook();
-        HandleMovement();
-        HandleWeaponBob();
-        SyncWeaponToCamera();   // <- NEW: weapon follows camera perfectly
+        float dt = Time.deltaTime;
+
+        HandleLook(dt);
+        HandleMovement(dt);
+        // Visual updates moved to LateUpdate
+    }
+
+    void LateUpdate()
+    {
+        float dt = Time.deltaTime;
+        HandleWeaponBob(dt);
+        SyncWeaponToCamera();   // weapon follows camera after look/physics
+        HandleWeaponRecoil(dt);
     }
 
     // ---------------------------------
     // LOOK
     // ---------------------------------
-    void HandleLook()
+    void HandleLook(float dt)
     {
-        float mouseX = lookInput.x * mouseSensitivity * Time.deltaTime;
-        float mouseY = lookInput.y * mouseSensitivity * Time.deltaTime;
+        float mouseX = lookInput.x * mouseSensitivity * dt;
+        float mouseY = lookInput.y * mouseSensitivity * dt;
 
         pitch -= mouseY;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
@@ -119,7 +154,7 @@ public class FirstPersonController : MonoBehaviour
     // ---------------------------------
     // MOVEMENT
     // ---------------------------------
-    void HandleMovement()
+    void HandleMovement(float dt)
     {
         if (controller.isGrounded && velocity.y < 0)
         {
@@ -128,10 +163,13 @@ public class FirstPersonController : MonoBehaviour
         }
 
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
-        controller.Move(move * moveSpeed * Time.deltaTime);
 
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+        // Update vertical velocity first
+        velocity.y += gravity * dt;
+
+        // Combine horizontal movement and vertical velocity into a single Move call
+        Vector3 totalMove = (move * moveSpeed) + new Vector3(0f, velocity.y, 0f);
+        controller.Move(totalMove * dt);
     }
 
     void Jump()
@@ -169,47 +207,43 @@ public class FirstPersonController : MonoBehaviour
     }
 
     // ---------------------------------
-    // CAMERA SHAKE FOR RECOIL
-    // ---------------------------------
-    IEnumerator DoCameraShake()
-    {
-        Vector3 originalPos = playerCamera.localPosition;
-        float elapsed = 0f;
-
-        while (elapsed < cameraShakeDuration)
-        {
-            Vector3 randomOffset = Random.insideUnitSphere * cameraShakeAmount;
-            playerCamera.localPosition = originalPos + randomOffset;
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        playerCamera.localPosition = originalPos;
-    }
-
-    // ---------------------------------
     // WEAPON BOB
     // ---------------------------------
-    void HandleWeaponBob()
+    void HandleWeaponBob(float dt)
     {
-        if (moveInput.magnitude > 0.1f && controller.isGrounded)
+        // use sqrMagnitude to avoid sqrt every frame
+        if (moveInput.sqrMagnitude > 0.01f && controller.isGrounded)
         {
-            bobTimer += Time.deltaTime * bobSpeed;
+            bobTimer += dt * bobSpeed;
 
             float x = Mathf.Sin(bobTimer) * bobAmount;
             float y = Mathf.Cos(bobTimer * 2f) * bobAmount * 1.3f;
 
-            weaponHolder.localPosition =
-                weaponHolderInitialLocalPos + new Vector3(x, y, 0f);
+            weaponHolder.localPosition = weaponHolderInitialLocalPos + new Vector3(x, y, 0f);
         }
         else
         {
             weaponHolder.localPosition = Vector3.Lerp(
                 weaponHolder.localPosition,
                 weaponHolderInitialLocalPos,
-                Time.deltaTime * 8f
+                dt * 8f
             );
         }
+    }
+
+    void HandleWeaponRecoil(float dt)
+    {
+        // Smooth position
+        recoilCurrentPos = Vector3.Lerp(recoilCurrentPos, recoilTargetPos, dt * recoilRecovery);
+        weaponRecoil.localPosition = recoilCurrentPos;
+
+        // Smooth rotation
+        recoilCurrentRot = Vector3.Lerp(recoilCurrentRot, recoilTargetRot, dt * recoilRecovery);
+        weaponRecoil.localRotation = Quaternion.Euler(recoilCurrentRot);
+
+        // Gradually reset recoil target
+        recoilTargetPos = Vector3.Lerp(recoilTargetPos, Vector3.zero, dt * recoilRecovery);
+        recoilTargetRot = Vector3.Lerp(recoilTargetRot, Vector3.zero, dt * recoilRecovery);
     }
 
     // ---------------------------------

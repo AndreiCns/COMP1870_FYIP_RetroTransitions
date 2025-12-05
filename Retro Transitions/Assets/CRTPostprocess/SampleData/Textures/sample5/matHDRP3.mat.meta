@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d9b260fc1f2454151804622cc43a8c5d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/SampleData/Textures/sample5/matHDRP3.mat
+  uploadId: 827074

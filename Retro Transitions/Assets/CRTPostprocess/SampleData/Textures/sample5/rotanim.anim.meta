@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 442aa797e77444988a39cbe6ef23c7c0
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/SampleData/Textures/sample5/rotanim.anim
+  uploadId: 827074

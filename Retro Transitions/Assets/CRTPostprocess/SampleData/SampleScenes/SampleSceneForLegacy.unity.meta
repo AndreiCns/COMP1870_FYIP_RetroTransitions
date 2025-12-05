@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2bf15538719d94eaf88595c9eab7a987
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/SampleData/SampleScenes/SampleSceneForLegacy.unity
+  uploadId: 827074

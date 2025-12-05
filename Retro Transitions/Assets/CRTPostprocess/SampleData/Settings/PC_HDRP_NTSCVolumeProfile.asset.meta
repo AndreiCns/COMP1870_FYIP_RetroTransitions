@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8fc3f838decca4f989d09e8bd7054f55
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/SampleData/Settings/PC_HDRP_NTSCVolumeProfile.asset
+  uploadId: 827074

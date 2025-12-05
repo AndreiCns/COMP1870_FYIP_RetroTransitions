@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: f181b86609204ca3aa028170048113e8
+timeCreated: 1753008274
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/Scripts/HDRP/NTSCPostprocessHDRP.cs
+  uploadId: 827074

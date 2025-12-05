@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4b6c7a3cd3f724a8286fa63edbafb9e7
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/SampleData/Settings/PC_HDRP_NTSCRPAsset.asset
+  uploadId: 827074

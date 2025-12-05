@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 3675a78ce60849c88c2119691687fb95
+timeCreated: 1739316898
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/Scripts/Editor/RenderingPipelineDefines.cs
+  uploadId: 827074

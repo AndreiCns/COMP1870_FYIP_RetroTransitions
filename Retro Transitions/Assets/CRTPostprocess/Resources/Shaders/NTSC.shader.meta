@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: b6f4a0ff533a3483cb9658dbe0e3c2cd
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/Resources/Shaders/NTSC.shader
+  uploadId: 827074

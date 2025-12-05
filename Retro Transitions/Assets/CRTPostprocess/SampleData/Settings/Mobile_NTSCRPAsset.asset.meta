@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 66014140268f741b9a7e4f4b0a7b3ed6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/SampleData/Settings/Mobile_NTSCRPAsset.asset
+  uploadId: 827074

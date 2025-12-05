@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 703b6042e6034b8f90a794f6a8827666
+timeCreated: 1753008402
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/Resources/Shaders/MultiPipeline.hlsl
+  uploadId: 827074

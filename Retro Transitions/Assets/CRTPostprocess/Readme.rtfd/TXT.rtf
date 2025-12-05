@@ -1,0 +1,147 @@
+{\rtf1\ansi\ansicpg932\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Monaco;\f1\fmodern\fcharset0 CourierNewPS-BoldMT;\f2\fnil\fcharset204 PTMono-Regular;
+\f3\fnil\fcharset128 HiraginoSans-W3;\f4\fnil\fcharset204 PTMono-Bold;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww18560\viewh12800\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 //----------------------------------------------\
+  CRTPostprocess for URP and Legacy Pipeline\
+  by xionchannel software\
+//----------------------------------------------\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f1\b\fs36 \cf0 *** How to use sample scenes\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\b0\fs24 \cf0     Sample scenes are provided for each pipeline.\
+	Please open the following scenes in an environment where the pipeline you are using is available.\
+\
+	/Assets/CRTPostprocess/SampleData/SampleScenes/\
+\
+	When a scene is opened, if the Editor environment does not match the scene settings,\
+	a dialog box will appear asking if the settings should be changed automatically.
+\f2 \
+	{{\NeXTGraphic SettingDialog.png \width5480 \height5120 \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\
+
+\f0 	Press OK to the Quality Settings will be changed to the appropriate settings for the sample scene.\
+	Press NO to the scene will be opened with incorrect setting that isn\'92t changed.\
+	Play the scene to see how the settings change with the program.\
+\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f1\b\fs36 \cf0 *** How to use postprocess
+\f0\b0\fs24 \
+    The setup procedure depends on the rendering pipeline.\
+    See the procedure for your own rendering pipeline environment.\
+\
+    
+\f1\b\fs28 * Setup in the URP Pipeline
+\f0\b0\fs24 \
+    1. Add "NTSCFeature" to the current Universal Render Data. (e.g. "PC_Renderer")\
+       Alternatively, create a new Universal Render Data and add "NTSCFeature".\
+       (If you have not created a new one, proceed to the 4th step)\
+    2. If you have created new Universal Render Data, add it to the current Universal Render Pipeline Asset.\
+    3. Then change Camera's Renderer to the new Universal Render Data.\
+    4. Adjust the NTSCFeature parameters in the Universal Render Data as needed.\
+       {{\NeXTGraphic URPParams.png \width8040 \height9820 \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\
+  \
+    
+\f1\b\fs28 * Setup in Legacy Pipeline (Built-in Pipeline)
+\f0\b0\fs24 \
+    1. Add the "NTSCPostprocess" component to Camera's GameObject.\
+    2. Adjust the parameters of the NTSCPostprocess component as needed.\
+       {{\NeXTGraphic LegacyParams.png \width8140 \height8820 \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\
+	\
+	
+\f1\b\fs28 * Setup in the HDRP Pipeline (Easy)
+\f0\b0\fs24 \
+	1. Add \'93NTSCPostprocessHDRP\'94 to After Post Process in the Custom Post Process Order in the Graphics setup.\
+       Click the \'93+\'94 button to select from the list.
+\f3 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f2 \cf0        {{\NeXTGraphic HDRPSetting.png \width14620 \height11840 \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0 \cf0 	2. Specify \'93PC_HDRP_NTSCRPAsset\'94 for the Render Pipeline Asset in the Quality settings.\
+	   If you are creating a new Render Pipeline Asset, please see \'93Setup in the HDRP Pipeline (New)\'94.\
+	3. Adjust the parameters of the PC_HDRP_NTSCVolumeProfile as needed.
+\f3 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f2 \cf0        {{\NeXTGraphic HDRPParams.png \width8320 \height12020 \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f3 \cf0 \
+	
+\f4\b\fs28 * 
+\f1 Setup in the HDRP Pipeline (New)
+\f2\b0\fs24 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0 \cf0     1. Add \'93NTSCPostprocessHDRP\'94 to After Post Process in the Custom Post Process Order in the Graphics setup.\
+       This is the same as \'93Setup in HDRP Pipeline (Easy)\'94.\
+	2. In the project view, create a \'93Volume Profile\'94 asset from the \'93Create/Rendering/Volume Profile\'94 menu.\
+	3. Press the Add Override button from the Volume Profile's inspector\
+       and select \'93Post-processing/Custom/NTSCPostprocessHDRP\'94 to create an override parameter for \'93NTSCPostprocessHDRP\'94.\
+	4. In the project view, create an \'93HDRP Asset\'94 asset from the \'93Create/Rendering/HDRP Asset\'94 menu.\
+	5. Assign the volume profile asset to the Volume Profile field of the HDRP Asset just created.\
+	6. Specify the HDRP Asset you just created for the Render Pipeline Asset in the Quality setting.\
+	7. Adjust the parameters of the Volume Profile asset as needed.\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f1\b\fs36 \cf0 *** Postprocess Parameters
+\f0\b0\fs24 \
+    The following are parameters for NTSCFeature, NTSCPostprocess, and NTSCPostprocessHDRP.\
+    When using URP, use the parameters of NTSCFeature, and for Legacy (Built-in), use those of NTSCPostprocess.\
+    For HDRP, use the parameters of the Volume Profile asset.\
+    \
+	{{\NeXTGraphic URPParams.png \width8040 \height9820 \appleattachmentpadding0 \appleembedtype0 \appleaqc
+}¬}\
+    \
+    Buffer Height:             Height pixel resolution for filter processing.\
+                               (It will be sharper at higher resolutions, but will lose its retro-display look.)\
+    Output Height:             Height pixel resolution for screen output.\
+                               (The number of scan lines is affected by this height.)\
+    Cross Talk Mode:           Method used for rainbow color bleeding using neighboring pixels.\
+                               [None] No rainbow bleeding is performed.\
+                               [Vertical] Rainbow bleeding is constant on the vertical axis.\
+                               [Slant] Rainbow bleeding is slanted.\
+                               [Slant Noise] Rainbow bleeding is slanted and flickering.\
+    Cross Talk Strength:       Cross-Talk (rainbow bleeding) intensity.\
+                               Larger values make the image more vivid,\
+                               and smaller values make it more black and white.\
+    Brightness:                Screen brightness.\
+    Black Level:               Black level brightness. (Specify 1.0526 for the same look as past versions.)\
+    Artifact Strength:         Strength of artifacts due to pixels on the left and right.\
+    Fringe Strength:           Strength of color bleeding by pixels on the left and right.\
+    Chroma Mod Frequency Scale:Value to change the chroma modulation frequency. (default = 1)\
+    Chroma Phase Shift Scale:  Value to change the chroma phase shift. (default = 1)\
+    Gaussian Blur Width:       The blur width using neighboring pixels.\
+                               The larger the value, the more blurry the image.\
+    Curvature:                 When turned on, the screen becomes distorted like a CRT.\
+    Corner Mask:               Circular mask of screen corners; turning OFF eliminates the mask,\
+                               but off-screen pixels may be visible if Curvature is ON.\
+    Corner Radius:             Number of pixel radius for circular masks in the corners of the screen.\
+                               (This value is used only when Curvature is OFF.)\
+    Scanline Strength:         Strength of the scan line.\
+                               (0~1: the higher the value, the clearer the scan lines appear)\
+    Beam Spread:               Scan line beam spread intensity. (0~1)\
+                               1: pixels appear to be connected to other scanlines above and below\
+	                              if the pixel luminance is high.\
+                               0: pixels are not connected to other scanlines above and below.\
+    Beam Strength:             The larger the value, the brighter the output pixels.\
+    Overscan Scale:            Scale value of how much the drawing should be enlarged in relation to the screen.\
+                               A value less than 1 means the drawing will be enlarged;\
+                               a value greater than 1 means the drawing will be reduced.\
+}

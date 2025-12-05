@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2cf7bea847b7b4f37be0f23cb5a7e450
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/Readme.rtfd/TXT.rtf
+  uploadId: 827074

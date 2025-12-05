@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 250920fbeb792419eb8088ec9387b231
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 310692
+  packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
+  packageVersion: 1.1
+  assetPath: Assets/CRTPostprocess/SampleData/SampleScenes/SampleSceneForURPMobile.unity
+  uploadId: 827074

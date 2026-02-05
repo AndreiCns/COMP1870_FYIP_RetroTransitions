@@ -82,6 +82,9 @@ namespace CRTPostprocess
 
         private static readonly int _renderTex1Id = Shader.PropertyToID("_NTSCTex1");
         private static readonly int _renderTex2Id = Shader.PropertyToID("_NTSCTex2");
+        #if !UNITY_6000_0_OR_NEWER
+        private static readonly int _afterPostProcessTextureId = Shader.PropertyToID("_CameraColorAttachmentB");
+        #endif
 
         private static LocalKeyword _turnNone;
         private static LocalKeyword _turnCW;
@@ -309,11 +312,14 @@ namespace CRTPostprocess
             cmd.GetTemporaryRT(renderTex2Id, w, h, 0, FilterMode.Bilinear, RenderTextureFormat.Default);
             
             // NTSC
-            cmd.Blit(_passData.activeColorBuffer, renderTex1Id, _passData.material, 3); // Copy to mini buffer
+            var source = renderingData.cameraData.postProcessEnabled
+                ? _afterPostProcessTextureId
+                : _passData.activeColorBuffer;
+            cmd.Blit(source, renderTex1Id, _passData.material, 3); // Copy to mini buffer
             cmd.Blit(renderTex1Id, renderTex2Id, _passData.material, 0); // RGB to YIQ
             cmd.Blit(renderTex2Id, renderTex1Id, _passData.material, 1); // YIQ to RGB and crosstalk
             cmd.ReleaseTemporaryRT(renderTex2Id);
-            cmd.Blit(renderTex1Id, _passData.activeColorBuffer, _passData.material, 2); // Gauss
+            cmd.Blit(renderTex1Id, source, _passData.material, 2); // Gauss
             cmd.ReleaseTemporaryRT(renderTex1Id);
             
             context.ExecuteCommandBuffer(cmd);

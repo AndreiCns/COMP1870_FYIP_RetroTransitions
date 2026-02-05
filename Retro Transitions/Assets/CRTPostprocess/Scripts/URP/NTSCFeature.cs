@@ -47,8 +47,13 @@ namespace CRTPostprocess
             {
                 _param.bufferHeight = volume.bufferHeight.value;
                 _param.outputHeight = volume.outputHeight.value;
+                #if UNITY_2023_2_OR_NEWER
                 _param.gaussianBlurWidth = volume.gaussianBlurWidth.value;
                 _param.crossTalkMode = volume.crossTalkMode.value;
+                #else
+                _param.gaussianBlurWidth = (NTSCPass.GaussianBlurWidth)volume.gaussianBlurWidth.value;
+                _param.crossTalkMode = (NTSCPass.CrossTalkMode)volume.crossTalkMode.value;
+                #endif
                 _param.crossTalkStrength = volume.crossTalkStrength.value;
                 _param.brightness = volume.brightness.value;
                 _param.blackLevel = volume.blackLevel.value;
@@ -63,7 +68,11 @@ namespace CRTPostprocess
                 _param.beamStrength = volume.beamStrength.value;
                 _param.beamSpread = volume.beamSpread.value;
                 _param.overscanScale = volume.overscanScale.value;
+                #if UNITY_2023_2_OR_NEWER
                 _param.displayOrientation = volume.displayOrientation.value;
+                #else
+                _param.displayOrientation = (NTSCPass.DisplayOrientation)volume.displayOrientation.value;
+                #endif
             }
             else
             {

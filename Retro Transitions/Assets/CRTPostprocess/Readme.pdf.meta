@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 8760112dd95634f628aa4c3af83e89c7
+guid: 68c081c1532dc46a3968629334cdb9cd
 DefaultImporter:
   externalObjects: {}
   userData: 
@@ -10,5 +10,5 @@ AssetOrigin:
   productId: 310692
   packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
   packageVersion: 1.23
-  assetPath: Assets/CRTPostprocess/SampleData/SampleScenes/SampleSceneForURP.unity
+  assetPath: Assets/CRTPostprocess/Readme.pdf
   uploadId: 842700

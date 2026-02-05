@@ -2578,6 +2578,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy_Ranged_Modern
       objectReference: {fileID: 0}
+    - target: {fileID: 7850409139278677110, guid: 7ec910faa2fb2754d84108cb107b4d92, type: 3}
+      propertyPath: m_TagString
+      value: enemy
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

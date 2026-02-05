@@ -6,42 +6,39 @@ using UnityEngine.InputSystem;
 public class FirstPersonController : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private Transform playerCamera;
-    [SerializeField] private Transform weaponHolder;
-    [SerializeField] private WeaponStyleSwap weaponStyleSwap;
-    [SerializeField] private Camera cam;
-    [SerializeField] private Transform weaponRecoil;
-
-    // If you genuinely don’t use this, delete it.
-    // [SerializeField] private StyleSwapManager styleSwapManager;
+    public Transform playerCamera;
+    public Transform weaponHolder;
+    public StyleSwapManager styleSwapManager; // Assign in Inspector
+    public WeaponStyleSwap weaponStyleSwap;   // Assign in Inspector
 
     [Header("Look Settings")]
-    [SerializeField] private float mouseSensitivity = 50f;
-    [SerializeField] private float minPitch = -70f;
-    [SerializeField] private float maxPitch = 70f;
+    public float mouseSensitivity = 50f;
+    public float minPitch = -70f;
+    public float maxPitch = 70f;
 
     [Header("Movement Settings")]
-    [SerializeField] private float moveSpeed = 10f;
-    [SerializeField] private float jumpHeight = 1.5f;
-    [SerializeField] private float gravity = -20f;
-    [SerializeField] private int maxJumps = 2;
+    public float moveSpeed = 10f;
+    public float jumpHeight = 1.5f;
+    public float gravity = -20f;
+    public int maxJumps = 2;
 
     [Header("FOV Kick")]
-    [SerializeField] private float fovKickAmount = 8f;
-    [SerializeField] private float fovKickTime = 0.15f;
+    public Camera cam;
+    public float fovKickAmount = 8f;
+    public float fovKickTime = 0.15f;
     private float defaultFOV;
-    private Coroutine fovKickRoutine;
 
     [Header("Weapon Bob")]
-    [SerializeField] private float bobSpeed = 10f;
-    [SerializeField] private float bobAmount = 0.03f;
+    public float bobSpeed = 10f;
+    public float bobAmount = 0.03f;
     private float bobTimer = 0f;
     private Vector3 weaponHolderInitialLocalPos;
 
     [Header("Weapon Recoil")]
-    [SerializeField] private float recoilKickback = 0.15f;
-    [SerializeField] private float recoilUp = 6f;
-    [SerializeField] private float recoilRecovery = 12f;
+    public Transform weaponRecoil;
+    public float recoilKickback = 0.15f;
+    public float recoilUp = 6f;
+    public float recoilRecovery = 12f;
 
     private Vector3 recoilCurrentPos;
     private Vector3 recoilTargetPos;
@@ -55,7 +52,7 @@ public class FirstPersonController : MonoBehaviour
     private Vector3 velocity;
     private int jumpCount = 0;
 
-    private void Start()
+    void Start()
     {
         controller = GetComponent<CharacterController>();
 
@@ -76,12 +73,20 @@ public class FirstPersonController : MonoBehaviour
     // ---------------------------------
     // INPUT EVENTS
     // ---------------------------------
-    public void OnMove(InputAction.CallbackContext ctx) => moveInput = ctx.ReadValue<Vector2>();
-    public void OnLook(InputAction.CallbackContext ctx) => lookInput = ctx.ReadValue<Vector2>();
+    public void OnMove(InputAction.CallbackContext ctx)
+    {
+        moveInput = ctx.ReadValue<Vector2>();
+    }
+
+    public void OnLook(InputAction.CallbackContext ctx)
+    {
+        lookInput = ctx.ReadValue<Vector2>();
+    }
 
     public void OnJump(InputAction.CallbackContext ctx)
     {
-        if (!ctx.performed) return;
+        if (!ctx.performed)
+            return;
 
         if (controller.isGrounded || jumpCount < maxJumps)
             Jump();
@@ -101,14 +106,15 @@ public class FirstPersonController : MonoBehaviour
     // ---------------------------------
     // UPDATE LOOP
     // ---------------------------------
-    private void Update()
+    void Update()
     {
         float dt = Time.deltaTime;
+
         HandleLook(dt);
         HandleMovement(dt);
     }
 
-    private void LateUpdate()
+    void LateUpdate()
     {
         float dt = Time.deltaTime;
         HandleWeaponBob(dt);
@@ -119,7 +125,7 @@ public class FirstPersonController : MonoBehaviour
     // ---------------------------------
     // LOOK
     // ---------------------------------
-    private void HandleLook(float dt)
+    void HandleLook(float dt)
     {
         float mouseX = lookInput.x * mouseSensitivity * dt;
         float mouseY = lookInput.y * mouseSensitivity * dt;
@@ -134,7 +140,7 @@ public class FirstPersonController : MonoBehaviour
     // ---------------------------------
     // MOVEMENT
     // ---------------------------------
-    private void HandleMovement(float dt)
+    void HandleMovement(float dt)
     {
         if (controller.isGrounded && velocity.y < 0)
         {
@@ -142,33 +148,26 @@ public class FirstPersonController : MonoBehaviour
             jumpCount = 0;
         }
 
-        // Clamp to avoid diagonal speed boost
-        Vector2 clamped = Vector2.ClampMagnitude(moveInput, 1f);
-        Vector3 move = (transform.right * clamped.x + transform.forward * clamped.y);
-
+        Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         velocity.y += gravity * dt;
 
         Vector3 totalMove = (move * moveSpeed) + new Vector3(0f, velocity.y, 0f);
         controller.Move(totalMove * dt);
     }
 
-    private void Jump()
+    void Jump()
     {
         velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         jumpCount++;
-
-        if (fovKickRoutine != null)
-            StopCoroutine(fovKickRoutine);
-
-        fovKickRoutine = StartCoroutine(FOVKick());
+        StartCoroutine(FOVKick());
     }
 
     // ---------------------------------
     // FOV KICK
     // ---------------------------------
-    private IEnumerator FOVKick()
+    IEnumerator FOVKick()
     {
-        float t = 0f;
+        float t = 0;
         float target = defaultFOV + fovKickAmount;
 
         while (t < fovKickTime)
@@ -178,7 +177,7 @@ public class FirstPersonController : MonoBehaviour
             yield return null;
         }
 
-        t = 0f;
+        t = 0;
         while (t < fovKickTime)
         {
             cam.fieldOfView = Mathf.Lerp(target, defaultFOV, t / fovKickTime);
@@ -187,13 +186,12 @@ public class FirstPersonController : MonoBehaviour
         }
 
         cam.fieldOfView = defaultFOV;
-        fovKickRoutine = null;
     }
 
     // ---------------------------------
-    // WEAPON BOB / RECOIL
+    // WEAPON BOB
     // ---------------------------------
-    private void HandleWeaponBob(float dt)
+    void HandleWeaponBob(float dt)
     {
         if (moveInput.sqrMagnitude > 0.01f && controller.isGrounded)
         {
@@ -214,7 +212,7 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
-    private void HandleWeaponRecoil(float dt)
+    void HandleWeaponRecoil(float dt)
     {
         recoilCurrentPos = Vector3.Lerp(recoilCurrentPos, recoilTargetPos, dt * recoilRecovery);
         weaponRecoil.localPosition = recoilCurrentPos;
@@ -226,7 +224,7 @@ public class FirstPersonController : MonoBehaviour
         recoilTargetRot = Vector3.Lerp(recoilTargetRot, Vector3.zero, dt * recoilRecovery);
     }
 
-    private void SyncWeaponToCamera()
+    void SyncWeaponToCamera()
     {
         weaponHolder.rotation = playerCamera.rotation;
     }

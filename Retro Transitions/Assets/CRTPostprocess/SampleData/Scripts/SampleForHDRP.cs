@@ -38,8 +38,13 @@ namespace CRTPostprocess.Sample
             volume.profile.TryGet<NTSCPostprocessHDRP>(out _profile);
             if (_profile != null)
             {
+                #if UNITY_2023_2_OR_NEWER
                 _crossTalkModeDefault = _profile.crossTalkMode.value;
                 _gaussianBlurWidthDefault = _profile.gaussianBlurWidth.value;
+                #else
+                _crossTalkModeDefault = (NTSCPostprocessHDRP.CrossTalkMode)_profile.crossTalkMode.value;
+                _gaussianBlurWidthDefault = (NTSCPostprocessHDRP.GaussianBlurWidth)_profile.gaussianBlurWidth.value;
+                #endif
                 _curvatureDefault = _profile.curvature.value;
                 _featureActive = _profile.enable.value;
                 
@@ -58,8 +63,13 @@ namespace CRTPostprocess.Sample
         {
             if (_profile != null)
             {
+                #if UNITY_2023_2_OR_NEWER
                 _profile.crossTalkMode.value = _crossTalkModeDefault;
                 _profile.gaussianBlurWidth.value = _gaussianBlurWidthDefault;
+                #else
+                _profile.crossTalkMode.value = (int)_crossTalkModeDefault;
+                _profile.gaussianBlurWidth.value = (int)_gaussianBlurWidthDefault;
+                #endif
                 _profile.curvature.value = _curvatureDefault;
                 _profile.enable.value = _featureActive;
 
@@ -79,9 +89,9 @@ namespace CRTPostprocess.Sample
             else
             {
                 // Update Text for Info
-                string t = "Cross-Talk: " + (NTSCPass.CrossTalkMode)(_currentCrossTalkMode + 1);
+                string t = "Cross-Talk: " + (NTSCPostprocessHDRP.CrossTalkMode)(_currentCrossTalkMode + 1);
                 t += ", Curvature: " + (_currentCurvature ? "ON" : "OFF");
-                t += ", GaussWidth: " + (NTSCPass.GaussianBlurWidth)_currentGaussianBlurWidthMode;
+                t += ", GaussWidth: " + (NTSCPostprocessHDRP.GaussianBlurWidth)_currentGaussianBlurWidthMode;
                 textForInfo.text = t;
             }
         }
@@ -139,8 +149,13 @@ namespace CRTPostprocess.Sample
         void SetNTSC(bool _curvature, NTSCPostprocessHDRP.CrossTalkMode _crossTalkMode, NTSCPostprocessHDRP.GaussianBlurWidth _gaussianBlurWidth)
         {
             if (_profile == null) return;
+            #if UNITY_2023_2_OR_NEWER
             _profile.crossTalkMode.value = _crossTalkMode;
             _profile.gaussianBlurWidth.value = _gaussianBlurWidth;
+            #else
+            _profile.crossTalkMode.value = (int)_crossTalkMode;
+            _profile.gaussianBlurWidth.value = (int)_gaussianBlurWidth;
+            #endif
             _profile.curvature.value = _curvature;
         }
 

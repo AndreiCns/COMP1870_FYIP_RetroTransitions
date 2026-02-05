@@ -9,6 +9,6 @@ AssetOrigin:
   serializedVersion: 1
   productId: 310692
   packageName: CRT Postprocess - for URP, HDRP and Legacy Pipelines
-  packageVersion: 1.1
+  packageVersion: 1.23
   assetPath: Assets/CRTPostprocess/SampleData/SampleScenes/SampleSceneForLegacy.unity
-  uploadId: 827074
+  uploadId: 842700

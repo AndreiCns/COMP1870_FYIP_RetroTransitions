@@ -35,7 +35,12 @@ namespace CRTPostprocess
         public BoolParameter enable = new BoolParameter(true);
         public IntParameter bufferHeight = new IntParameter(480);
         public IntParameter outputHeight = new IntParameter(240);
+        #if UNITY_2023_2_OR_NEWER
         public EnumParameter<CrossTalkMode> crossTalkMode = new EnumParameter<CrossTalkMode>(CrossTalkMode.Vertical);
+        #else
+        [Tooltip("0=None, 1=Vertical, 2=Slant, 3=SlantNoise")]
+        public ClampedIntParameter crossTalkMode = new ClampedIntParameter((int)CrossTalkMode.Vertical, 0, 3);
+        #endif
         public FloatParameter crossTalkStrength = new FloatParameter(2f);
         public FloatParameter brightness = new FloatParameter(0.95f);
         public FloatParameter blackLevel = new FloatParameter(1.0526f);
@@ -43,7 +48,12 @@ namespace CRTPostprocess
         public FloatParameter fringeStrength = new FloatParameter(0.75f);
         public FloatParameter chromaModFrequencyScale = new FloatParameter(1f);
         public FloatParameter chromaPhaseShiftScale = new FloatParameter(1f);
+        #if UNITY_2023_2_OR_NEWER
         public EnumParameter<GaussianBlurWidth> gaussianBlurWidth = new EnumParameter<GaussianBlurWidth>(GaussianBlurWidth.TAP8);
+        #else
+        [Tooltip("0=TAP4, 1=TAP8, 2=TAP24")]
+        public ClampedIntParameter gaussianBlurWidth = new ClampedIntParameter((int)GaussianBlurWidth.TAP8, 0, 2);
+        #endif
         public BoolParameter curvature = new BoolParameter(true);
         public BoolParameter cornerMask = new BoolParameter(true);
         [Tooltip("Non curvature mode uses this parameter.")] public IntParameter cornerRadius = new IntParameter(16);
@@ -51,7 +61,12 @@ namespace CRTPostprocess
         public FloatParameter beamSpread = new FloatParameter(0.5f);
         public FloatParameter beamStrength = new FloatParameter(1f);
         public FloatParameter overscanScale = new FloatParameter(0.985f);
+        #if UNITY_2023_2_OR_NEWER
         public EnumParameter<DisplayOrientation> displayOrientation = new EnumParameter<DisplayOrientation>(DisplayOrientation.None);
+        #else
+        [Tooltip("0=None, 1=CW, 2=CCW")]
+        public ClampedIntParameter displayOrientation = new ClampedIntParameter((int)DisplayOrientation.None, 0, 2);
+        #endif
 
         private Material _material;
 
@@ -144,7 +159,11 @@ namespace CRTPostprocess
             // 一時的なレンダーテクスチャを作成
             int h = bufferHeight.value;
             int w = GetTargetWidth(screenWidth, screenHeight, bufferHeight.value);
+            #if UNITY_2023_2_OR_NEWER
             if (displayOrientation.value != DisplayOrientation.None)
+            #else
+            if (displayOrientation.value != (int)DisplayOrientation.None)
+            #endif
             {
                 (h, w) = (w, h);
             }
@@ -152,7 +171,11 @@ namespace CRTPostprocess
             cmd.GetTemporaryRTArray(_renderTex1Id, w, h, 1, 0, FilterMode.Bilinear, GraphicsFormat.R16G16B16A16_SFloat);
             cmd.GetTemporaryRTArray(_renderTex2Id, w, h, 1, 0, FilterMode.Bilinear, GraphicsFormat.R16G16B16A16_SFloat);
 
+            #if UNITY_2023_2_OR_NEWER
             if (crossTalkMode == CrossTalkMode.SlantNoise)
+            #else
+            if (crossTalkMode.value == (int)CrossTalkMode.SlantNoise)
+            #endif
             {
                 cmd.SetGlobalInt(_propFrameCount, Time.frameCount);
             }
@@ -184,19 +207,35 @@ namespace CRTPostprocess
             _material.SetKeyword(_turnCCW, false);
             switch (displayOrientation.value)
             {
+                #if UNITY_2023_2_OR_NEWER
                 case DisplayOrientation.None:
+                #else
+                case (int)DisplayOrientation.None:
+                #endif
                     _material.SetKeyword(_turnNone, true);
                     break;
+                #if UNITY_2023_2_OR_NEWER
                 case DisplayOrientation.CW:
+                #else
+                case (int)DisplayOrientation.CW:
+                #endif
                     _material.SetKeyword(_turnCW, true);
                     break;
+                #if UNITY_2023_2_OR_NEWER
                 case DisplayOrientation.CCW:
+                #else
+                case (int)DisplayOrientation.CCW:
+                #endif
                     _material.SetKeyword(_turnCCW, true);
                     break;
             }
             
             // Texture Sizes
+            #if UNITY_2023_2_OR_NEWER
             if (displayOrientation != DisplayOrientation.None)
+            #else
+            if (displayOrientation.value != (int)DisplayOrientation.None)
+            #endif
             {
                 (screenHeight, screenWidth) =  (screenWidth, screenHeight);
             }
@@ -211,13 +250,25 @@ namespace CRTPostprocess
             _material.SetKeyword(_keyTap24, false);
             switch (gaussianBlurWidth.value)
             {
+                #if UNITY_2023_2_OR_NEWER
                 case GaussianBlurWidth.TAP4:
+                #else
+                case (int)GaussianBlurWidth.TAP4:
+                #endif
                     _material.SetKeyword(_keyTap4, true);
                     break;
+                #if UNITY_2023_2_OR_NEWER
                 case GaussianBlurWidth.TAP8:
+                #else
+                case (int)GaussianBlurWidth.TAP8:
+                #endif
                     _material.SetKeyword(_keyTap8, true);
                     break;
+                #if UNITY_2023_2_OR_NEWER
                 case GaussianBlurWidth.TAP24:
+                #else
+                case (int)GaussianBlurWidth.TAP24:
+                #endif
                     _material.SetKeyword(_keyTap24, true);
                     break;
             }
@@ -228,13 +279,25 @@ namespace CRTPostprocess
             _material.SetKeyword(_keyCrossSlantNoise, false);
             switch (crossTalkMode.value)
             {
+                #if UNITY_2023_2_OR_NEWER
                 case CrossTalkMode.Vertical:
+                #else
+                case (int)CrossTalkMode.Vertical:
+                #endif
                     _material.SetKeyword(_keyCrossVertical, true);
                     break;
+                #if UNITY_2023_2_OR_NEWER
                 case CrossTalkMode.Slant:
+                #else
+                case (int)CrossTalkMode.Slant:
+                #endif
                     _material.SetKeyword(_keyCrossSlant, true);
                     break;
+                #if UNITY_2023_2_OR_NEWER
                 case CrossTalkMode.SlantNoise:
+                #else
+                case (int)CrossTalkMode.SlantNoise:
+                #endif
                     _material.SetKeyword(_keyCrossSlantNoise, true);
                     break;
             }

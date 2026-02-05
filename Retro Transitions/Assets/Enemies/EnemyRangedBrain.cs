@@ -20,7 +20,6 @@ public class EnemyRangedBrain : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float patrolPointTolerance = 1.0f;
     [SerializeField] private float searchDuration = 2.5f;
-    [SerializeField] private float combatRepathRate = 0.2f;
     [SerializeField] private float strafeRadius = 4f;
     [SerializeField] private float strafeInterval = 1.2f;
 
@@ -36,10 +35,8 @@ public class EnemyRangedBrain : MonoBehaviour
     private int patrolIndex;
     private Vector3 lastSeenPos;
     private float searchTimer;
-    private float repathTimer;
     private float strafeTimer;
 
-    // Helps stop spammy SetDestination calls when already going there
     private Vector3 lastDestination;
     private bool hasLastDestination;
 
@@ -52,18 +49,24 @@ public class EnemyRangedBrain : MonoBehaviour
 
         attackModule = attackModuleBehaviour as IEnemyAttack;
         if (attackModuleBehaviour != null && attackModule == null && logWarnings)
-        {
             Debug.LogWarning($"{name}: Attack Module is set but does not implement IEnemyAttack.", this);
-        }
 
         if (health != null)
             health.OnDied.AddListener(OnDied);
+        else if (logWarnings)
+            Debug.LogWarning($"{name}: Health reference not set.", this);
 
-        // If perception has a target already, initialise lastSeenPos defensively
         if (perception != null && perception.target != null)
             lastSeenPos = perception.target.position;
         else
             lastSeenPos = transform.position;
+    }
+
+    private void OnDestroy()
+    {
+        // Important: unsubscribe to prevent duplicate calls if pooled / re-enabled
+        if (health != null)
+            health.OnDied.RemoveListener(OnDied);
     }
 
     private void Start()
@@ -82,11 +85,9 @@ public class EnemyRangedBrain : MonoBehaviour
             case State.Patrol:
                 TickPatrol(seesTarget);
                 break;
-
             case State.Combat:
                 TickCombat(seesTarget, target);
                 break;
-
             case State.Search:
                 TickSearch(seesTarget);
                 break;
@@ -95,22 +96,15 @@ public class EnemyRangedBrain : MonoBehaviour
         UpdateLocomotionAnim();
     }
 
-    // ----------------------
-    // PERCEPTION
-    // ----------------------
     private bool TryUpdateLastSeen(out Transform target)
     {
         target = null;
 
-        if (perception == null)
-            return false;
-
-        if (perception.target == null)
+        if (perception == null || perception.target == null)
             return false;
 
         target = perception.target;
 
-        // Safer pattern: always provide a fallback pos
         Vector3 seenPos = lastSeenPos;
         bool sees = perception.CanSeeTarget(out seenPos);
 
@@ -120,9 +114,6 @@ public class EnemyRangedBrain : MonoBehaviour
         return sees;
     }
 
-    // ----------------------
-    // PATROL
-    // ----------------------
     private void TickPatrol(bool seesTarget)
     {
         if (seesTarget)
@@ -150,13 +141,9 @@ public class EnemyRangedBrain : MonoBehaviour
         patrolIndex = patrolRoute.NextIndex(patrolIndex);
     }
 
-    // ----------------------
-    // COMBAT
-    // ----------------------
     private void EnterCombat()
     {
         state = State.Combat;
-        repathTimer = 0f;
         strafeTimer = 0f;
     }
 
@@ -170,12 +157,6 @@ public class EnemyRangedBrain : MonoBehaviour
 
         FaceTarget(target);
 
-        // Throttle decision updates (even if not used yet, this avoids future spam)
-        repathTimer -= Time.deltaTime;
-        if (repathTimer <= 0f)
-            repathTimer = combatRepathRate;
-
-        // Strafe movement cadence
         strafeTimer -= Time.deltaTime;
         if (strafeTimer <= 0f)
         {
@@ -190,26 +171,17 @@ public class EnemyRangedBrain : MonoBehaviour
             strafeTimer = strafeInterval;
         }
 
-        // Shooting
-        if (attackModule == null)
-        {
-            if (attackModuleBehaviour != null && logWarnings)
-                Debug.LogWarning($"{name}: attackModuleBehaviour assigned but attackModule is null (interface cast failed).", this);
-            return;
-        }
+        if (attackModule == null) return;
 
         if (attackModule.CanAttack(target))
         {
             if (agent != null)
-                agent.isStopped = true; // stop to shoot for readability
+                agent.isStopped = true;
 
-            // IMPORTANT: If you're using Animation Events to spawn projectiles,
-            // TickAttack should only trigger the shoot animation / set target.
             attackModule.TickAttack(target);
         }
         else
         {
-            // If cannot attack (out of range / cooldown), keep moving
             if (agent != null)
                 agent.isStopped = false;
         }
@@ -238,9 +210,6 @@ public class EnemyRangedBrain : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * 12f);
     }
 
-    // ----------------------
-    // SEARCH
-    // ----------------------
     private void EnterSearch()
     {
         state = State.Search;
@@ -264,7 +233,6 @@ public class EnemyRangedBrain : MonoBehaviour
 
         if (agent == null) return;
 
-        // When reached last seen position, wait, then return to patrol
         if (!agent.pathPending && agent.remainingDistance <= patrolPointTolerance)
         {
             if (searchTimer <= 0f)
@@ -275,9 +243,6 @@ public class EnemyRangedBrain : MonoBehaviour
         }
     }
 
-    // ----------------------
-    // ANIMATION
-    // ----------------------
     private void UpdateLocomotionAnim()
     {
         if (animator == null || agent == null) return;
@@ -286,14 +251,10 @@ public class EnemyRangedBrain : MonoBehaviour
         animator.SetBool(isWalkingParam, moving);
     }
 
-    // ----------------------
-    // NAV DESTINATION HELPER
-    // ----------------------
     private void SetDestinationSafe(Vector3 dest)
     {
         if (agent == null) return;
 
-        // Avoid spamming SetDestination with basically the same value
         if (hasLastDestination && (dest - lastDestination).sqrMagnitude < 0.01f)
             return;
 
@@ -302,15 +263,19 @@ public class EnemyRangedBrain : MonoBehaviour
         hasLastDestination = true;
     }
 
-    // ----------------------
-    // DEATH
-    // ----------------------
     private void OnDied()
     {
         state = State.Dead;
 
         if (agent != null)
+        {
             agent.isStopped = true;
+            agent.ResetPath();
+        }
+
+        // Optional: stop attacks if your module supports it (recommended)
+        if (attackModuleBehaviour != null)
+            attackModuleBehaviour.enabled = false;
 
         foreach (var c in GetComponentsInChildren<Collider>())
             c.enabled = false;

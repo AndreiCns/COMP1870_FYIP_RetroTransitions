@@ -79,6 +79,7 @@ GameObject:
   - component: {fileID: 6167359431578726850}
   - component: {fileID: 6640040306213971789}
   - component: {fileID: 87983737135291642}
+  - component: {fileID: 4490752715762505070}
   m_Layer: 7
   m_Name: Enemy_Ranged_Modern
   m_TagString: enemy
@@ -161,10 +162,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 50
-  OnDamaged:
+  onDamaged:
     m_PersistentCalls:
       m_Calls: []
-  OnDied:
+  onDied:
     m_PersistentCalls:
       m_Calls: []
 --- !u!114 &7727831140646079104
@@ -219,7 +220,6 @@ MonoBehaviour:
   attackModuleBehaviour: {fileID: 6640040306213971789}
   patrolPointTolerance: 1
   searchDuration: 2.5
-  combatRepathRate: 0.2
   strafeRadius: 4
   strafeInterval: 1.2
   isWalkingParam: isWalking
@@ -267,6 +267,27 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4490752715762505070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7850409139278677110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c21ae28f058c521429b7240af3828e65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: {fileID: 7060542006589125585}
+  animator: {fileID: 87983737135291642}
+  agent: {fileID: 1999600841954103461}
+  disableOnDeath:
+  - {fileID: 6167359431578726850}
+  - {fileID: 6640040306213971789}
+  - {fileID: 556273217516262870}
+  dieTrigger: Die
+  destroyDelay: 3
 --- !u!1001 &1300206998745316009
 PrefabInstance:
   m_ObjectHideFlags: 0

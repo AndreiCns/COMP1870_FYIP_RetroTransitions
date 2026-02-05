@@ -11,9 +11,9 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private WeaponStyleSwap weaponStyleSwap;
     [SerializeField] private Camera cam;
     [SerializeField] private Transform weaponRecoil;
+    [SerializeField] private Animator weaponAnimator;
+    private string shootTrigger = "Fire";
 
-    // If you genuinely don’t use this, delete it.
-    // [SerializeField] private StyleSwapManager styleSwapManager;
 
     [Header("Look Settings")]
     [SerializeField] private float mouseSensitivity = 50f;
@@ -29,9 +29,9 @@ public class FirstPersonController : MonoBehaviour
     [Header("FOV Kick")]
     [SerializeField] private float fovKickAmount = 8f;
     [SerializeField] private float fovKickTime = 0.15f;
-    private float defaultFOV;
     private Coroutine fovKickRoutine;
-
+    private float defaultFOV;
+        
     [Header("Weapon Bob")]
     [SerializeField] private float bobSpeed = 10f;
     [SerializeField] private float bobAmount = 0.03f;
@@ -90,6 +90,7 @@ public class FirstPersonController : MonoBehaviour
     public void OnFire(InputAction.CallbackContext ctx)
     {
         if (!ctx.performed) return;
+        weaponAnimator.SetTrigger(shootTrigger);
 
         weaponStyleSwap?.Fire();
 
@@ -230,4 +231,6 @@ public class FirstPersonController : MonoBehaviour
     {
         weaponHolder.rotation = playerCamera.rotation;
     }
+
+   
 }

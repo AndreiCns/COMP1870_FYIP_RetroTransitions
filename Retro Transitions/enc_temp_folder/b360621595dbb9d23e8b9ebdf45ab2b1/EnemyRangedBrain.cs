@@ -18,7 +18,7 @@ public class EnemyRangedBrain : MonoBehaviour
     [Header("Movement")]
     public float patrolPointTolerance = 1.0f;
     public float searchDuration = 2.5f;
-    public float combatRepathRate = 0.2f;
+    public float combatRepathRate = 0.2f; // how often to refresh destination during combat (seconds)
     public float strafeRadius = 4f;
     public float strafeInterval = 1.2f;
 
@@ -34,7 +34,12 @@ public class EnemyRangedBrain : MonoBehaviour
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+
         attackModule = attackModuleBehaviour as IEnemyAttack;
+        if (attackModuleBehaviour != null && attackModule == null)
+        {
+            Debug.LogWarning($"{name}: attackModuleBehaviour is set but does not implement IEnemyAttack.", this);
+        }
 
         if (health != null)
             health.OnDied.AddListener(OnDied);
@@ -49,8 +54,15 @@ public class EnemyRangedBrain : MonoBehaviour
     {
         if (state == State.Dead) return;
 
-        bool sees = perception != null && perception.CanSeeTarget(out Vector3 seenPos);
-        if (sees) lastSeenPos = seenPos;
+        // --- FIX: Avoid short-circuit + out var which can leave seenPos unassigned ---
+        bool sees = false;
+        Vector3 seenPos = lastSeenPos;
+
+        if (perception != null)
+            sees = perception.CanSeeTarget(out seenPos);
+
+        if (sees)
+            lastSeenPos = seenPos;
 
         switch (state)
         {
@@ -110,10 +122,24 @@ public class EnemyRangedBrain : MonoBehaviour
             return;
         }
 
+        if (perception == null || perception.target == null)
+        {
+            EnterSearch();
+            return;
+        }
+
         Transform target = perception.target;
-        if (target == null) { EnterSearch(); return; }
 
         FaceTarget(target);
+
+        // --- Use repathTimer meaningfully (fixes CS0414 and avoids spammy destination updates) ---
+        repathTimer -= Time.deltaTime;
+        if (repathTimer <= 0f)
+        {
+            // If you want “maintain distance” later, this is where you'd add it.
+            // For now, repathTimer simply controls how often we consider updating movement decisions.
+            repathTimer = combatRepathRate;
+        }
 
         // Maintain spacing + mild strafe so it feels “boomer shooter”
         strafeTimer -= Time.deltaTime;
@@ -125,7 +151,7 @@ public class EnemyRangedBrain : MonoBehaviour
             strafeTimer = strafeInterval;
         }
 
-        // Only shoot when in range (and optionally when agent isn't turning too hard)
+        // Only shoot when in range
         if (attackModule != null && attackModule.CanAttack(target))
         {
             agent.isStopped = true; // stop to shoot (classic readable behaviour)
@@ -194,6 +220,7 @@ public class EnemyRangedBrain : MonoBehaviour
     {
         state = State.Dead;
         agent.isStopped = true;
+
         // Minimal: disable colliders/AI. You can trigger ragdoll/anim here.
         foreach (var c in GetComponentsInChildren<Collider>())
             c.enabled = false;

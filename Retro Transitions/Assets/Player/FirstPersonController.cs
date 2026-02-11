@@ -16,13 +16,31 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private PlayerShootModule retroShoot;
 
     private PlayerShootModule ActiveShoot =>
-    (modernShoot != null && modernShoot.gameObject.activeInHierarchy) ? modernShoot :
-    (retroShoot != null && retroShoot.gameObject.activeInHierarchy) ? retroShoot :
-    null;
+        (modernShoot != null && modernShoot.gameObject.activeInHierarchy) ? modernShoot :
+        (retroShoot != null && retroShoot.gameObject.activeInHierarchy) ? retroShoot :
+        null;
 
     private string shootTrigger = "Fire";
 
+    [Header("Movement SFX (ONE source for footsteps + jump + landing)")]
+    [SerializeField] private AudioSource movementSfxSource; // Assign ONE AudioSource in inspector
+    [SerializeField] private AudioClip[] footstepClips;
+    [SerializeField] private float stepInterval = 0.5f;
 
+    [Header("Jump & Landing Audio")]
+    [SerializeField] private AudioClip jumpClip;
+    [SerializeField] private AudioClip landingClip;
+    [SerializeField] private float jumpVolume = 1f;
+    [SerializeField] private float landingVolume = 1f;
+
+    [Header("Retro Audio")]
+    [SerializeField] private AudioLowPassFilter movementLowPass;
+    [SerializeField] private StyleSwapEvent styleSwapEvent;
+    [SerializeField] private float retroCutoff = 1200f;
+    [SerializeField] private float retroResonanceQ = 1.1f;
+
+    [Header("Debug")]
+    [SerializeField] private bool verboseLogs = false;
 
     [Header("Look Settings")]
     [SerializeField] private float mouseSensitivity = 50f;
@@ -40,7 +58,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float fovKickTime = 0.15f;
     private Coroutine fovKickRoutine;
     private float defaultFOV;
-        
+
     [Header("Weapon Bob")]
     [SerializeField] private float bobSpeed = 10f;
     [SerializeField] private float bobAmount = 0.03f;
@@ -64,10 +82,47 @@ public class FirstPersonController : MonoBehaviour
     private Vector3 velocity;
     private int jumpCount = 0;
 
-    private void Start()
+    private float stepTimer;
+    private bool wasGrounded;
+
+    private void Awake()
     {
         controller = GetComponent<CharacterController>();
 
+        if (movementSfxSource == null)
+        {
+            Debug.LogError("[FPC] movementSfxSource is not assigned. Assign one AudioSource for movement SFX.");
+            enabled = false;
+            return;
+        }
+
+        // Ensure lowpass is on the SAME object as the movement SFX source
+        if (movementLowPass == null)
+            movementLowPass = movementSfxSource.GetComponent<AudioLowPassFilter>();
+
+        if (movementLowPass == null)
+            movementLowPass = movementSfxSource.gameObject.AddComponent<AudioLowPassFilter>();
+    }
+
+    private void OnEnable()
+    {
+        if (styleSwapEvent != null)
+            styleSwapEvent.OnStyleSwap += OnStyleChanged;
+        else
+            Debug.LogWarning("[FPC] styleSwapEvent is NULL. Assign the SAME GlobalStyleSwapEvent asset used by StyleSwapManager.");
+
+        if (verboseLogs)
+            Debug.Log($"[FPC] OnEnable. movementSfxSource={movementSfxSource.name}, lowPass={(movementLowPass ? "OK" : "NULL")}");
+    }
+
+    private void OnDisable()
+    {
+        if (styleSwapEvent != null)
+            styleSwapEvent.OnStyleSwap -= OnStyleChanged;
+    }
+
+    private void Start()
+    {
         if (cam == null || playerCamera == null || weaponHolder == null || weaponRecoil == null)
         {
             Debug.LogError($"FirstPersonController on '{gameObject.name}' is missing required references.");
@@ -80,18 +135,17 @@ public class FirstPersonController : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        ApplyMovementFilter(isRetro: false);
     }
 
-    // ---------------------------------
-    // INPUT EVENTS
-    // ---------------------------------
+    // INPUT
     public void OnMove(InputAction.CallbackContext ctx) => moveInput = ctx.ReadValue<Vector2>();
     public void OnLook(InputAction.CallbackContext ctx) => lookInput = ctx.ReadValue<Vector2>();
 
     public void OnJump(InputAction.CallbackContext ctx)
     {
         if (!ctx.performed) return;
-
         if (controller.isGrounded || jumpCount < maxJumps)
             Jump();
     }
@@ -107,14 +161,10 @@ public class FirstPersonController : MonoBehaviour
         weaponAnimator.SetTrigger(shootTrigger);
         weaponStyleSwap?.Fire();
 
-        // Procedural recoil
         recoilTargetPos -= new Vector3(0, 0, recoilKickback);
         recoilTargetRot += new Vector3(-recoilUp, 0, 0);
     }
 
-    // ---------------------------------
-    // UPDATE LOOP
-    // ---------------------------------
     private void Update()
     {
         float dt = Time.deltaTime;
@@ -130,9 +180,6 @@ public class FirstPersonController : MonoBehaviour
         HandleWeaponRecoil(dt);
     }
 
-    // ---------------------------------
-    // LOOK
-    // ---------------------------------
     private void HandleLook(float dt)
     {
         float mouseX = lookInput.x * mouseSensitivity * dt;
@@ -145,18 +192,22 @@ public class FirstPersonController : MonoBehaviour
         transform.Rotate(Vector3.up * mouseX);
     }
 
-    // ---------------------------------
-    // MOVEMENT
-    // ---------------------------------
     private void HandleMovement(float dt)
     {
+        bool isGroundedNow = controller.isGrounded;
+
+        // Landing detection: only when transitioning air -> ground with some downward speed
+        if (!wasGrounded && isGroundedNow && velocity.y < -2f)
+            PlayLandingSFX();
+
+        wasGrounded = isGroundedNow;
+
         if (controller.isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
             jumpCount = 0;
         }
 
-        // Clamp to avoid diagonal speed boost
         Vector2 clamped = Vector2.ClampMagnitude(moveInput, 1f);
         Vector3 move = (transform.right * clamped.x + transform.forward * clamped.y);
 
@@ -164,6 +215,8 @@ public class FirstPersonController : MonoBehaviour
 
         Vector3 totalMove = (move * moveSpeed) + new Vector3(0f, velocity.y, 0f);
         controller.Move(totalMove * dt);
+
+        HandleFootsteps(dt, move.magnitude);
     }
 
     private void Jump()
@@ -171,15 +224,54 @@ public class FirstPersonController : MonoBehaviour
         velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         jumpCount++;
 
+        PlayJumpSFX();
+
         if (fovKickRoutine != null)
             StopCoroutine(fovKickRoutine);
 
         fovKickRoutine = StartCoroutine(FOVKick());
     }
 
-    // ---------------------------------
-    // FOV KICK
-    // ---------------------------------
+    private void PlayJumpSFX()
+    {
+        if (jumpClip == null) return;
+        movementSfxSource.pitch = Random.Range(0.95f, 1.05f);
+        movementSfxSource.PlayOneShot(jumpClip, jumpVolume);
+    }
+
+    private void PlayLandingSFX()
+    {
+        if (landingClip == null) return;
+        movementSfxSource.pitch = Random.Range(0.9f, 1.0f);
+        movementSfxSource.PlayOneShot(landingClip, landingVolume);
+    }
+
+    private void HandleFootsteps(float dt, float moveAmount)
+    {
+        if (!controller.isGrounded || moveAmount < 0.1f)
+        {
+            stepTimer = 0f;
+            return;
+        }
+
+        stepTimer -= dt;
+
+        if (stepTimer <= 0f)
+        {
+            PlayFootstep();
+            stepTimer = stepInterval;
+        }
+    }
+
+    private void PlayFootstep()
+    {
+        if (footstepClips == null || footstepClips.Length == 0) return;
+
+        int index = Random.Range(0, footstepClips.Length);
+        movementSfxSource.pitch = Random.Range(0.95f, 1.05f);
+        movementSfxSource.PlayOneShot(footstepClips[index], 1f);
+    }
+
     private IEnumerator FOVKick()
     {
         float t = 0f;
@@ -204,9 +296,6 @@ public class FirstPersonController : MonoBehaviour
         fovKickRoutine = null;
     }
 
-    // ---------------------------------
-    // WEAPON BOB / RECOIL
-    // ---------------------------------
     private void HandleWeaponBob(float dt)
     {
         if (moveInput.sqrMagnitude > 0.01f && controller.isGrounded)
@@ -220,11 +309,7 @@ public class FirstPersonController : MonoBehaviour
         }
         else
         {
-            weaponHolder.localPosition = Vector3.Lerp(
-                weaponHolder.localPosition,
-                weaponHolderInitialLocalPos,
-                dt * 8f
-            );
+            weaponHolder.localPosition = Vector3.Lerp(weaponHolder.localPosition, weaponHolderInitialLocalPos, dt * 8f);
         }
     }
 
@@ -245,5 +330,24 @@ public class FirstPersonController : MonoBehaviour
         weaponHolder.rotation = playerCamera.rotation;
     }
 
-   
+    private void OnStyleChanged(StyleState newState)
+    {
+        if (verboseLogs)
+            Debug.Log($"[FPC] OnStyleChanged -> {newState}");
+
+        ApplyMovementFilter(newState == StyleState.Retro);
+    }
+
+    private void ApplyMovementFilter(bool isRetro)
+    {
+        if (movementLowPass == null) return;
+
+        movementLowPass.enabled = isRetro;
+
+        if (isRetro)
+        {
+            movementLowPass.cutoffFrequency = retroCutoff;
+            movementLowPass.lowpassResonanceQ = retroResonanceQ;
+        }
+    }
 }

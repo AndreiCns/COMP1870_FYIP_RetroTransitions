@@ -3,42 +3,50 @@ using UnityEngine;
 public class WeaponStyleSwap : MonoBehaviour
 {
     [Header("References")]
-    public GameObject modernWeapon;
-    public GameObject retroWeapon;
+    [SerializeField] private GameObject modernWeapon;
+    [SerializeField] private GameObject retroWeapon;
 
     [Header("Listen to")]
-    public StyleSwapEvent styleSwapEvent;
+    [SerializeField] private StyleSwapEvent styleSwapEvent;
 
     private Animator modernAnim;
     private Animator retroAnim;
 
-    void Awake()
+    private void Awake()
     {
-        modernAnim = modernWeapon.GetComponentInChildren<Animator>();
-        retroAnim = retroWeapon.GetComponentInChildren<Animator>();
+        if (modernWeapon != null)
+            modernAnim = modernWeapon.GetComponentInChildren<Animator>();
+
+        if (retroWeapon != null)
+            retroAnim = retroWeapon.GetComponentInChildren<Animator>();
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
-        styleSwapEvent.OnStyleSwap += OnStyleChanged;
+        if (styleSwapEvent != null)
+            styleSwapEvent.OnStyleSwap += OnStyleChanged;
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
-        styleSwapEvent.OnStyleSwap -= OnStyleChanged;
+        if (styleSwapEvent != null)
+            styleSwapEvent.OnStyleSwap -= OnStyleChanged;
     }
 
-    void OnStyleChanged(StyleState newState)
+    private void OnStyleChanged(StyleState newState)
     {
         bool isRetro = newState == StyleState.Retro;
 
-        modernWeapon.SetActive(!isRetro);
-        retroWeapon.SetActive(isRetro);
+        if (modernWeapon != null)
+            modernWeapon.SetActive(!isRetro);
+
+        if (retroWeapon != null)
+            retroWeapon.SetActive(isRetro);
     }
 
     public void Fire()
     {
-        if (retroWeapon.activeSelf)
+        if (retroWeapon != null && retroWeapon.activeSelf)
             retroAnim?.SetTrigger("Fire");
         else
             modernAnim?.SetTrigger("Fire");

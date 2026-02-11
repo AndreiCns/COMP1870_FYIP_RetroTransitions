@@ -12,7 +12,16 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private Camera cam;
     [SerializeField] private Transform weaponRecoil;
     [SerializeField] private Animator weaponAnimator;
+    [SerializeField] private PlayerShootModule modernShoot;
+    [SerializeField] private PlayerShootModule retroShoot;
+
+    private PlayerShootModule ActiveShoot =>
+    (modernShoot != null && modernShoot.gameObject.activeInHierarchy) ? modernShoot :
+    (retroShoot != null && retroShoot.gameObject.activeInHierarchy) ? retroShoot :
+    null;
+
     private string shootTrigger = "Fire";
+
 
 
     [Header("Look Settings")]
@@ -90,8 +99,12 @@ public class FirstPersonController : MonoBehaviour
     public void OnFire(InputAction.CallbackContext ctx)
     {
         if (!ctx.performed) return;
-        weaponAnimator.SetTrigger(shootTrigger);
 
+        var shoot = ActiveShoot;
+        if (shoot != null && !shoot.TryBeginFire())
+            return;
+
+        weaponAnimator.SetTrigger(shootTrigger);
         weaponStyleSwap?.Fire();
 
         // Procedural recoil

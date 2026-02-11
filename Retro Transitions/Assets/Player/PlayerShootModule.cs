@@ -3,35 +3,96 @@ using UnityEngine;
 public class PlayerShootModule : MonoBehaviour
 {
     [Header("Setup")]
+    [SerializeField] private Camera playerCamera;
     [SerializeField] private Transform muzzle;
-    [SerializeField] private Projectile projectilePrefab;
+    [SerializeField] private MuzzleFlashController muzzleFlash;
+
+    [Header("Audio")]
+    [SerializeField] private AudioSource gunshotSource;
+    [SerializeField] private AudioClip gunshotClip;
+    [SerializeField] private Vector2 pitchVariation = new Vector2(0.97f, 1.03f);
 
     [Header("Tuning")]
-    [SerializeField] private float projectileSpeed = 30f;
     [SerializeField] private float damage = 10f;
-    
+    [SerializeField] private float range = 200f;
+    [SerializeField] private LayerMask hitMask;
 
     [Header("Debug")]
+    [SerializeField] private bool drawDebugRay = false;
     [SerializeField] private bool logWarnings = true;
 
-    private Transform owner; // who fired (used by projectile to avoid self-hit)
+    private GameObject owner;
+
+    public bool CanFire => canFire;
+    private bool canFire = true;
 
     private void Awake()
     {
-        owner = transform.root; // Player root
-        if (muzzle == null && logWarnings) Debug.LogWarning($"{name}: muzzle not assigned", this);
-        if (projectilePrefab == null && logWarnings) Debug.LogWarning($"{name}: projectilePrefab not assigned", this);
+        owner = transform.root.gameObject;
+
+        if (playerCamera == null && logWarnings)
+            Debug.LogWarning($"{name}: playerCamera not assigned", this);
+        if (muzzle == null && logWarnings)
+            Debug.LogWarning($"{name}: muzzle not assigned", this);
+        if (gunshotSource == null && logWarnings)
+            Debug.LogWarning($"{name}: gunshotSource not assigned", this);
     }
 
-    // CALLED BY ANIMATION EVENT
+    // Called by your INPUT (before setting animator trigger)
+    public bool TryBeginFire()
+    {
+        if (!canFire) return false;
+        canFire = false;
+        return true;
+    }
+
+    // CALLED BY ANIMATION EVENT (at firing frame)
     public void FireProjectile()
     {
-        if (muzzle == null || projectilePrefab == null) return;
+        if (playerCamera == null) return;
 
-        // Aim forward from camera/weapon direction
-        Vector3 dir = muzzle.forward;
+        muzzleFlash?.Play();
 
-        Projectile p = Instantiate(projectilePrefab, muzzle.position, Quaternion.LookRotation(dir));
-        p.Init(dir, projectileSpeed, damage, owner.gameObject);
+        if (gunshotSource != null && gunshotClip != null)
+        {
+            gunshotSource.pitch = Random.Range(pitchVariation.x, pitchVariation.y);
+            gunshotSource.PlayOneShot(gunshotClip);
+        }
+
+        Vector3 origin = playerCamera.transform.position;
+        Vector3 direction = playerCamera.transform.forward;
+
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, range, hitMask))
+        {
+            if (drawDebugRay)
+                Debug.DrawLine(origin, hit.point, Color.red, 1f);
+
+            if (hit.collider.TryGetComponent(out IDamageable dmg))
+            {
+                dmg.TakeDamage(damage, new DamageInfo
+                {
+                    Point = hit.point,
+                    Direction = direction,
+                    Source = owner
+                });
+            }
+        }
+        else
+        {
+            if (drawDebugRay)
+                Debug.DrawRay(origin, direction * range, Color.yellow, 1f);
+        }
+    }
+
+    // CALLED BY ANIMATION EVENT (last frame of shoot anim)
+    public void OnShootAnimFinished()
+    {
+        canFire = true;
+    }
+
+    // Safety: if weapon gets disabled mid-shot
+    private void OnDisable()
+    {
+        canFire = true;
     }
 }

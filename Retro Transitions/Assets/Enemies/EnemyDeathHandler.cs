@@ -5,13 +5,14 @@ public class EnemyDeathHandler : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private Health health;
-    [SerializeField] private Animator animator;
+    [SerializeField] private EnemyVisualAnimatorProxy animProxy;
     [SerializeField] private NavMeshAgent agent;
-    [SerializeField] private MonoBehaviour[] disableOnDeath; // brain, attack module, perception etc.
+    [SerializeField] private MonoBehaviour[] disableOnDeath;
 
     [Header("Animation")]
     [SerializeField] private string dieTrigger = "Die";
-    [SerializeField] private float destroyDelay = 3f; // fallback if you don't use anim event
+    [SerializeField] private float destroyDelay = 3f; // set to 0 if using anim event
+    [SerializeField] private bool verboseLogs = false;
 
     private bool dead;
 
@@ -19,7 +20,7 @@ public class EnemyDeathHandler : MonoBehaviour
     {
         if (health == null) health = GetComponent<Health>();
         if (agent == null) agent = GetComponent<NavMeshAgent>();
-        if (animator == null) animator = GetComponentInChildren<Animator>();
+        if (animProxy == null) animProxy = GetComponent<EnemyVisualAnimatorProxy>();
 
         if (health != null)
             health.OnDied.AddListener(HandleDeath);
@@ -36,12 +37,12 @@ public class EnemyDeathHandler : MonoBehaviour
         if (dead) return;
         dead = true;
 
+        if (verboseLogs) Debug.Log($"[{name}] HandleDeath -> trigger '{dieTrigger}'", this);
+
         // stop AI & combat
         if (disableOnDeath != null)
-        {
             foreach (var b in disableOnDeath)
                 if (b != null) b.enabled = false;
-        }
 
         // stop nav
         if (agent != null)
@@ -55,15 +56,14 @@ public class EnemyDeathHandler : MonoBehaviour
         foreach (var c in GetComponentsInChildren<Collider>())
             c.enabled = false;
 
-        // play death anim
-        if (animator != null)
-            animator.SetTrigger(dieTrigger);
+        // play death anim (modern or retro)
+        animProxy?.SetTrigger(dieTrigger);
 
-        // fallback destroy (replace with animation event if you want precision)
-        Destroy(gameObject, destroyDelay);
+        // fallback destroy
+        if (destroyDelay > 0f)
+            Destroy(gameObject, destroyDelay);
     }
 
-    // OPTIONAL: call this via animation event at the end of the death clip
     public void DestroySelf()
     {
         Destroy(gameObject);

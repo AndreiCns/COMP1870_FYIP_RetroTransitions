@@ -1,17 +1,20 @@
 using UnityEngine;
 
-public class BillboardToCamera : MonoBehaviour
+public class BillboardFaceCamera : MonoBehaviour
 {
-    private Camera cam;
+    [SerializeField] private Camera targetCamera;
+    [SerializeField] private bool lockY = true;
 
-    private void Awake()
+    void LateUpdate()
     {
-        cam = Camera.main;
-    }
+        if (targetCamera == null) targetCamera = Camera.main;
+        if (targetCamera == null) return;
 
-    private void LateUpdate()
-    {
-        if (cam == null) return;
-        transform.forward = cam.transform.forward; // faces camera
+        Vector3 toCam = transform.position - targetCamera.transform.position;
+
+        if (lockY) toCam.y = 0f; // keep upright like Doom-style billboards
+        if (toCam.sqrMagnitude < 0.0001f) return;
+
+        transform.rotation = Quaternion.LookRotation(toCam);
     }
 }

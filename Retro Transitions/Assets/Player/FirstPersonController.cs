@@ -20,10 +20,10 @@ public class FirstPersonController : MonoBehaviour
         (retroShoot != null && retroShoot.gameObject.activeInHierarchy) ? retroShoot :
         null;
 
-    private string shootTrigger = "Fire";
+    private readonly string shootTrigger = "Fire";
 
     [Header("Movement SFX (ONE source for footsteps + jump + landing)")]
-    [SerializeField] private AudioSource movementSfxSource; // Assign ONE AudioSource in inspector
+    [SerializeField] private AudioSource movementSfxSource;
     [SerializeField] private AudioClip[] footstepClips;
     [SerializeField] private float stepInterval = 0.5f;
 
@@ -62,7 +62,7 @@ public class FirstPersonController : MonoBehaviour
     [Header("Weapon Bob")]
     [SerializeField] private float bobSpeed = 10f;
     [SerializeField] private float bobAmount = 0.03f;
-    private float bobTimer = 0f;
+    private float bobTimer;
     private Vector3 weaponHolderInitialLocalPos;
 
     [Header("Weapon Recoil")]
@@ -78,9 +78,9 @@ public class FirstPersonController : MonoBehaviour
     private CharacterController controller;
     private Vector2 moveInput;
     private Vector2 lookInput;
-    private float pitch = 0f;
+    private float pitch;
     private Vector3 velocity;
-    private int jumpCount = 0;
+    private int jumpCount;
 
     private float stepTimer;
     private bool wasGrounded;
@@ -96,7 +96,6 @@ public class FirstPersonController : MonoBehaviour
             return;
         }
 
-        // Ensure lowpass is on the SAME object as the movement SFX source
         if (movementLowPass == null)
             movementLowPass = movementSfxSource.GetComponent<AudioLowPassFilter>();
 
@@ -125,7 +124,7 @@ public class FirstPersonController : MonoBehaviour
     {
         if (cam == null || playerCamera == null || weaponHolder == null || weaponRecoil == null)
         {
-            Debug.LogError($"FirstPersonController on '{gameObject.name}' is missing required references.");
+            Debug.LogError($"[FPC] Missing required references on '{gameObject.name}'.");
             enabled = false;
             return;
         }
@@ -196,13 +195,13 @@ public class FirstPersonController : MonoBehaviour
     {
         bool isGroundedNow = controller.isGrounded;
 
-        // Landing detection: only when transitioning air -> ground with some downward speed
+        // Landing detection (air -> ground with downward speed)
         if (!wasGrounded && isGroundedNow && velocity.y < -2f)
             PlayLandingSFX();
 
         wasGrounded = isGroundedNow;
 
-        if (controller.isGrounded && velocity.y < 0)
+        if (controller.isGrounded && velocity.y < 0f)
         {
             velocity.y = -2f;
             jumpCount = 0;
@@ -210,13 +209,14 @@ public class FirstPersonController : MonoBehaviour
 
         Vector2 clamped = Vector2.ClampMagnitude(moveInput, 1f);
         Vector3 move = (transform.right * clamped.x + transform.forward * clamped.y);
+        float moveAmount = move.magnitude;
 
         velocity.y += gravity * dt;
 
         Vector3 totalMove = (move * moveSpeed) + new Vector3(0f, velocity.y, 0f);
         controller.Move(totalMove * dt);
 
-        HandleFootsteps(dt, move.magnitude);
+        HandleFootsteps(dt, moveAmount);
     }
 
     private void Jump()
@@ -258,12 +258,12 @@ public class FirstPersonController : MonoBehaviour
 
         if (stepTimer <= 0f)
         {
-            PlayFootstep();
+            PlayFootstepSFX();
             stepTimer = stepInterval;
         }
     }
 
-    private void PlayFootstep()
+    private void PlayFootstepSFX()
     {
         if (footstepClips == null || footstepClips.Length == 0) return;
 

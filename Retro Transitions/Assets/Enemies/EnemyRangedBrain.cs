@@ -4,205 +4,141 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyRangedBrain : MonoBehaviour
 {
-    private enum State { Patrol, Combat, Search, Dead }
+    private enum State { Idle, Chase, Dead }
 
     [Header("Core")]
-    [SerializeField] private EnemyPerception perception;
-    [SerializeField] private PatrolRoute patrolRoute;
+    [SerializeField] private Transform target;                 // Player root
     [SerializeField] private Health health;
-    [SerializeField] private Animator animator;
+    [SerializeField] private EnemyVisualAnimatorProxy animProxy;
 
     [Header("Combat")]
-    [Tooltip("Must implement IEnemyAttack (e.g., RangedAttackModule).")]
     [SerializeField] private MonoBehaviour attackModuleBehaviour; // must implement IEnemyAttack
     private IEnemyAttack attackModule;
 
-    [Header("Movement")]
-    [SerializeField] private float patrolPointTolerance = 1.0f;
-    [SerializeField] private float searchDuration = 2.5f;
-    [SerializeField] private float strafeRadius = 4f;
-    [SerializeField] private float strafeInterval = 1.2f;
+    [Tooltip("When player is within this distance (and LOS if enabled), enemy wakes up and chases.")]
+    [SerializeField] private float aggroRange = 25f;
 
-    [Header("Animation Params")]
+    [Tooltip("Enemy stops moving around this distance and shoots.")]
+    [SerializeField] private float stopDistance = 12f;
+
+    [Tooltip("Small buffer so it doesn’t jitter between stop/move.")]
+    [SerializeField] private float distanceHysteresis = 1.5f;
+
+    [Header("Line of sight (optional, 90s feel = simple ray)")]
+    [SerializeField] private bool requireLineOfSight = false;
+    [SerializeField] private Transform eyes;                   // optional
+    [SerializeField] private float eyeHeightFallback = 1.6f;
+    [SerializeField] private LayerMask lineOfSightMask = ~0;   // set to Everything minus Enemy
+
+    [Header("Animation")]
     [SerializeField] private string isWalkingParam = "isWalking";
 
-    [Header("Debug")]
-    [SerializeField] private bool logWarnings = true;
-
     private NavMeshAgent agent;
-    private State state = State.Patrol;
-
-    private int patrolIndex;
-    private Vector3 lastSeenPos;
-    private float searchTimer;
-    private float strafeTimer;
-
-    private Vector3 lastDestination;
-    private bool hasLastDestination;
+    private State state = State.Idle;
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
-
-        if (animator == null)
-            animator = GetComponentInChildren<Animator>();
+        if (animProxy == null) animProxy = GetComponent<EnemyVisualAnimatorProxy>();
 
         attackModule = attackModuleBehaviour as IEnemyAttack;
-        if (attackModuleBehaviour != null && attackModule == null && logWarnings)
-            Debug.LogWarning($"{name}: Attack Module is set but does not implement IEnemyAttack.", this);
 
         if (health != null)
             health.OnDied.AddListener(OnDied);
-        else if (logWarnings)
-            Debug.LogWarning($"{name}: Health reference not set.", this);
 
-        if (perception != null && perception.target != null)
-            lastSeenPos = perception.target.position;
-        else
-            lastSeenPos = transform.position;
+        agent.isStopped = true;
+        agent.ResetPath();
     }
 
     private void OnDestroy()
     {
-        // Important: unsubscribe to prevent duplicate calls if pooled / re-enabled
         if (health != null)
             health.OnDied.RemoveListener(OnDied);
-    }
-
-    private void Start()
-    {
-        GoToNextPatrolPoint();
     }
 
     private void Update()
     {
         if (state == State.Dead) return;
+        if (target == null || attackModule == null) { SetWalking(false); return; }
 
-        bool seesTarget = TryUpdateLastSeen(out Transform target);
+        float distToTarget = Vector3.Distance(transform.position, target.position);
+
+        bool inAggro = distToTarget <= aggroRange;
+        bool hasLos = !requireLineOfSight || HasLineOfSight(target);
 
         switch (state)
         {
-            case State.Patrol:
-                TickPatrol(seesTarget);
-                break;
-            case State.Combat:
-                TickCombat(seesTarget, target);
-                break;
-            case State.Search:
-                TickSearch(seesTarget);
-                break;
-        }
-
-        UpdateLocomotionAnim();
-    }
-
-    private bool TryUpdateLastSeen(out Transform target)
-    {
-        target = null;
-
-        if (perception == null || perception.target == null)
-            return false;
-
-        target = perception.target;
-
-        Vector3 seenPos = lastSeenPos;
-        bool sees = perception.CanSeeTarget(out seenPos);
-
-        if (sees)
-            lastSeenPos = seenPos;
-
-        return sees;
-    }
-
-    private void TickPatrol(bool seesTarget)
-    {
-        if (seesTarget)
-        {
-            EnterCombat();
-            return;
-        }
-
-        if (agent == null) return;
-
-        if (!agent.pathPending && agent.remainingDistance <= patrolPointTolerance)
-            GoToNextPatrolPoint();
-    }
-
-    private void GoToNextPatrolPoint()
-    {
-        if (agent == null) return;
-        if (patrolRoute == null || patrolRoute.points == null || patrolRoute.points.Length == 0) return;
-
-        agent.isStopped = false;
-
-        Vector3 dest = patrolRoute.GetPoint(patrolIndex);
-        SetDestinationSafe(dest);
-
-        patrolIndex = patrolRoute.NextIndex(patrolIndex);
-    }
-
-    private void EnterCombat()
-    {
-        state = State.Combat;
-        strafeTimer = 0f;
-    }
-
-    private void TickCombat(bool seesTarget, Transform target)
-    {
-        if (!seesTarget || target == null)
-        {
-            EnterSearch();
-            return;
-        }
-
-        FaceTarget(target);
-
-        strafeTimer -= Time.deltaTime;
-        if (strafeTimer <= 0f)
-        {
-            Vector3 strafePos = PickStrafePosition(target.position);
-
-            if (agent != null)
-            {
-                agent.isStopped = false;
-                SetDestinationSafe(strafePos);
-            }
-
-            strafeTimer = strafeInterval;
-        }
-
-        if (attackModule == null) return;
-
-        if (attackModule.CanAttack(target))
-        {
-            if (agent != null)
+            case State.Idle:
                 agent.isStopped = true;
+                agent.ResetPath();
+                SetWalking(false);
 
-            attackModule.TickAttack(target);
+                if (inAggro && hasLos)
+                    state = State.Chase;
+                break;
+
+            case State.Chase:
+                // If you want “classic” behaviour: once awake, don’t go back to idle.
+                // If you DO want it to calm down when far, uncomment:
+                // if (!inAggro) { state = State.Idle; break; }
+
+                FaceTarget(target);
+
+                float moveAt = stopDistance + distanceHysteresis;
+                float stopAt = Mathf.Max(0f, stopDistance - distanceHysteresis);
+
+                if (distToTarget > moveAt)
+                {
+                    agent.isStopped = false;
+                    agent.stoppingDistance = stopDistance;
+                    agent.SetDestination(target.position);
+                    SetWalking(true);
+                }
+                else if (distToTarget < stopAt)
+                {
+                    agent.isStopped = true;
+                    agent.ResetPath();
+                    SetWalking(false);
+                }
+                else
+                {
+                    // inside hysteresis band: keep current state (prevents jitter)
+                }
+
+                // Shoot if in attack range (uses your module’s range)
+                if (attackModule.CanAttack(target))
+                {
+                    agent.isStopped = true;
+                    agent.ResetPath();
+                    SetWalking(false);
+
+                    attackModule.TickAttack(target);
+                }
+                break;
         }
-        else
+    }
+
+    private bool HasLineOfSight(Transform t)
+    {
+        Vector3 origin = eyes != null ? eyes.position : (transform.position + Vector3.up * eyeHeightFallback);
+        Vector3 targetPos = t.position + Vector3.up * 1.1f;
+
+        Vector3 toTarget = targetPos - origin;
+        float dist = toTarget.magnitude;
+        if (dist <= 0.001f) return true;
+
+        Vector3 dir = toTarget / dist;
+
+        if (Physics.Raycast(origin, dir, out RaycastHit hit, dist, lineOfSightMask, QueryTriggerInteraction.Ignore))
         {
-            if (agent != null)
-                agent.isStopped = false;
+            return hit.transform == t || hit.transform.root == t.root;
         }
+        return false;
     }
 
-    private Vector3 PickStrafePosition(Vector3 around)
+    private void FaceTarget(Transform t)
     {
-        Vector2 r = Random.insideUnitCircle.normalized * strafeRadius;
-        Vector3 desired = new Vector3(around.x + r.x, transform.position.y, around.z + r.y);
-
-        if (NavMesh.SamplePosition(desired, out NavMeshHit hit, 2f, NavMesh.AllAreas))
-            return hit.position;
-
-        return transform.position;
-    }
-
-    private void FaceTarget(Transform target)
-    {
-        if (target == null) return;
-
-        Vector3 flat = target.position - transform.position;
+        Vector3 flat = t.position - transform.position;
         flat.y = 0f;
         if (flat.sqrMagnitude < 0.001f) return;
 
@@ -210,74 +146,19 @@ public class EnemyRangedBrain : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * 12f);
     }
 
-    private void EnterSearch()
+    private void SetWalking(bool walking)
     {
-        state = State.Search;
-        searchTimer = searchDuration;
-
-        if (agent == null) return;
-
-        agent.isStopped = false;
-        SetDestinationSafe(lastSeenPos);
-    }
-
-    private void TickSearch(bool seesTarget)
-    {
-        if (seesTarget)
-        {
-            EnterCombat();
-            return;
-        }
-
-        searchTimer -= Time.deltaTime;
-
-        if (agent == null) return;
-
-        if (!agent.pathPending && agent.remainingDistance <= patrolPointTolerance)
-        {
-            if (searchTimer <= 0f)
-            {
-                state = State.Patrol;
-                GoToNextPatrolPoint();
-            }
-        }
-    }
-
-    private void UpdateLocomotionAnim()
-    {
-        if (animator == null || agent == null) return;
-
-        bool moving = !agent.isStopped && agent.velocity.sqrMagnitude > 0.05f;
-        animator.SetBool(isWalkingParam, moving);
-    }
-
-    private void SetDestinationSafe(Vector3 dest)
-    {
-        if (agent == null) return;
-
-        if (hasLastDestination && (dest - lastDestination).sqrMagnitude < 0.01f)
-            return;
-
-        agent.SetDestination(dest);
-        lastDestination = dest;
-        hasLastDestination = true;
+        animProxy?.SetBool(isWalkingParam, walking);
     }
 
     private void OnDied()
     {
         state = State.Dead;
-
         if (agent != null)
         {
             agent.isStopped = true;
             agent.ResetPath();
         }
-
-        // Optional: stop attacks if your module supports it (recommended)
-        if (attackModuleBehaviour != null)
-            attackModuleBehaviour.enabled = false;
-
-        foreach (var c in GetComponentsInChildren<Collider>())
-            c.enabled = false;
+        SetWalking(false);
     }
 }

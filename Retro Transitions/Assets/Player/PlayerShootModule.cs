@@ -62,7 +62,7 @@ public class PlayerShootModule : MonoBehaviour
         Vector3 origin = playerCamera.transform.position;
         Vector3 direction = playerCamera.transform.forward;
 
-        if (Physics.Raycast(origin, direction, out RaycastHit hit, range, hitMask))
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
         {
             if (drawDebugRay)
                 Debug.DrawLine(origin, hit.point, Color.red, 1f);

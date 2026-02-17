@@ -2,21 +2,17 @@ using UnityEngine;
 
 public class EnemyVisualAnimatorProxy : MonoBehaviour
 {
-    [Header("Visual Animators")]
+    [Header("Animators")]
     [SerializeField] private Animator modernAnimator;
     [SerializeField] private Animator retroAnimator;
 
-    [Header("Optional: keep both animators in sync even when one is hidden")]
-    [SerializeField] private bool driveBothAnimators = false;
+    [Header("Drive both (recommended for style swapping)")]
+    [SerializeField] private bool driveBothAnimators = true;
 
-    private Animator ActiveAnimator
+    public void SetStyleAnimators(Animator modern, Animator retro)
     {
-        get
-        {
-            if (modernAnimator != null && modernAnimator.gameObject.activeInHierarchy) return modernAnimator;
-            if (retroAnimator != null && retroAnimator.gameObject.activeInHierarchy) return retroAnimator;
-            return modernAnimator != null ? modernAnimator : retroAnimator;
-        }
+        modernAnimator = modern;
+        retroAnimator = retro;
     }
 
     public void SetBool(string param, bool value)
@@ -28,8 +24,7 @@ public class EnemyVisualAnimatorProxy : MonoBehaviour
         }
         else
         {
-            var a = ActiveAnimator;
-            if (a) a.SetBool(param, value);
+            if (modernAnimator) modernAnimator.SetBool(param, value);
         }
     }
 
@@ -42,29 +37,20 @@ public class EnemyVisualAnimatorProxy : MonoBehaviour
         }
         else
         {
-            var a = ActiveAnimator;
-            if (a) a.SetTrigger(param);
+            if (modernAnimator) modernAnimator.SetTrigger(param);
         }
     }
 
-    public void Play(string stateName, int layer = 0, float normalizedTime = 0f)
+    public void ResetTrigger(string param)
     {
         if (driveBothAnimators)
         {
-            if (modernAnimator) modernAnimator.Play(stateName, layer, normalizedTime);
-            if (retroAnimator) retroAnimator.Play(stateName, layer, normalizedTime);
+            if (modernAnimator) modernAnimator.ResetTrigger(param);
+            if (retroAnimator) retroAnimator.ResetTrigger(param);
         }
         else
         {
-            var a = ActiveAnimator;
-            if (a) a.Play(stateName, layer, normalizedTime);
+            if (modernAnimator) modernAnimator.ResetTrigger(param);
         }
-    }
-
-    public void RebindAndUpdate()
-    {
-        // Useful if you see a 1-frame “wrong pose” after enabling a visual
-        if (modernAnimator) { modernAnimator.Rebind(); modernAnimator.Update(0f); }
-        if (retroAnimator) { retroAnimator.Rebind(); retroAnimator.Update(0f); }
     }
 }

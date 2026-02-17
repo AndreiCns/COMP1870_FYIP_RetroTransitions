@@ -3,7 +3,7 @@ using UnityEngine;
 public class RangedAttackModule : MonoBehaviour, IEnemyAttack
 {
     [Header("Setup")]
-    [SerializeField] private Transform muzzle;              // IMPORTANT: put this on root (always active)
+    [SerializeField] private Transform muzzle;
     [SerializeField] private GameObject projectilePrefab;
 
     [Header("Tuning")]
@@ -17,58 +17,21 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
 
     [Header("Animation")]
     [SerializeField] private string shootTriggerName = "Shoot";
-    [SerializeField] private float fireWindup = 0.15f;
-
-    [Header("Debug")]
-    [SerializeField] private bool logWarnings = true;
 
     private float fireTimer;
     private Transform currentTarget;
-
     private EnemyVisualAnimatorProxy animProxy;
-
-    private bool pendingShot;
-    private float pendingTimer;
-
     private float attackRangeSqr;
 
     private void Awake()
     {
         animProxy = GetComponentInParent<EnemyVisualAnimatorProxy>();
         attackRangeSqr = attackRange * attackRange;
-
-        if (muzzle == null && logWarnings)
-            Debug.LogWarning($"{name}: RangedAttackModule has no muzzle assigned.", this);
-
-        if (projectilePrefab == null && logWarnings)
-            Debug.LogWarning($"{name}: RangedAttackModule has no projectilePrefab assigned.", this);
-
-        if (animProxy == null && logWarnings)
-            Debug.LogWarning($"{name}: No EnemyVisualAnimatorProxy found in parent.", this);
-    }
-
-    private void Update()
-    {
-        if (!pendingShot) return;
-
-        // Cancel if target lost
-        if (currentTarget == null)
-        {
-            pendingShot = false;
-            return;
-        }
-
-        pendingTimer -= Time.deltaTime;
-        if (pendingTimer > 0f) return;
-
-        pendingShot = false;
-        FireProjectile();
     }
 
     public bool CanAttack(Transform target)
     {
         if (target == null) return false;
-
         Vector3 delta = target.position - transform.position;
         return delta.sqrMagnitude <= attackRangeSqr;
     }
@@ -80,23 +43,24 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
         fireTimer -= Time.deltaTime;
         if (fireTimer > 0f) return;
         if (target == null) return;
-
-        // Gate by range again for safety
         if (!CanAttack(target)) return;
 
         currentTarget = target;
 
-        // Trigger anim (retro/modern via proxy)
+        // drive both animators / active animator through proxy
         animProxy?.SetTrigger(shootTriggerName);
 
-        // Queue shot once per fire cycle
-        pendingShot = true;
-        pendingTimer = fireWindup;
-
+        // IMPORTANT: actual projectile spawn is now done by ANIMATION EVENT
         fireTimer = fireCooldown;
     }
 
-    private void FireProjectile()
+    // THIS is what your Animation Event should call
+    public void FireProjectile_AnimEvent()
+    {
+        FireProjectileInternal();
+    }
+
+    private void FireProjectileInternal()
     {
         if (projectilePrefab == null || muzzle == null) return;
         if (currentTarget == null) return;

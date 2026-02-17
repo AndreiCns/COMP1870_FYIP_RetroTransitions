@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8372156506354854186}
   - component: {fileID: 4640171794242235702}
   - component: {fileID: 1027544634569683581}
+  - component: {fileID: 5061219483637301260}
   m_Layer: 0
   m_Name: Enemy_Ranged_Retro
   m_TagString: Untagged
@@ -125,3 +126,15 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &5061219483637301260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 229960294699886356}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7377593bbb8356d40a165f4bcbdf3281, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

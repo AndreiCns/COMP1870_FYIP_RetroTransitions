@@ -16,17 +16,34 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
     [SerializeField] private float aimHeightOffset = 1.2f;
 
     [Header("Animation")]
-    [SerializeField] private string shootTriggerName = "Shoot";
+    [SerializeField] private string isShootingBool = "isShooting";
+    [SerializeField] private float shootStateTime = 0.25f; // how long we keep isShooting true
 
     private float fireTimer;
+    private float shootTimer;
+    private bool shotArmed;              // <- only allow ONE event per shot
     private Transform currentTarget;
     private EnemyVisualAnimatorProxy animProxy;
     private float attackRangeSqr;
+    public void SetMuzzle(Transform newMuzzle) => muzzle = newMuzzle;
+
 
     private void Awake()
     {
         animProxy = GetComponentInParent<EnemyVisualAnimatorProxy>();
         attackRangeSqr = attackRange * attackRange;
+    }
+
+    private void Update()
+    {
+        fireTimer -= Time.deltaTime;
+
+        if (shootTimer > 0f)
+        {
+            shootTimer -= Time.deltaTime;
+            if (shootTimer <= 0f)
+                animProxy?.SetBool(isShootingBool, false);
+        }
     }
 
     public bool CanAttack(Transform target)
@@ -40,23 +57,30 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
 
     public void TickAttack(Transform target)
     {
-        fireTimer -= Time.deltaTime;
         if (fireTimer > 0f) return;
         if (target == null) return;
         if (!CanAttack(target)) return;
 
         currentTarget = target;
 
-        // drive both animators / active animator through proxy
-        animProxy?.SetTrigger(shootTriggerName);
+        // Arm exactly ONE event spawn for this shot cycle
+        shotArmed = true;
 
-        // IMPORTANT: actual projectile spawn is now done by ANIMATION EVENT
+        // Drive animation (bool version)
+        animProxy?.SetBool(isShootingBool, true);
+        shootTimer = shootStateTime;
+
+        // Start cooldown immediately
         fireTimer = fireCooldown;
     }
 
-    // THIS is what your Animation Event should call
+    // Animation Event calls this (via relay)
     public void FireProjectile_AnimEvent()
     {
+        // If we already spawned for this shot cycle, ignore duplicates
+        if (!shotArmed) return;
+        shotArmed = false;
+
         FireProjectileInternal();
     }
 

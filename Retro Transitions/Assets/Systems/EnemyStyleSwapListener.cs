@@ -13,12 +13,25 @@ public class EnemyStyleSwapListener : MonoBehaviour
     [SerializeField] private Animator modernAnimator;
     [SerializeField] private Animator retroAnimator;
 
-    [Header("Optional")]
-    [SerializeField] private bool syncAnimatorOnSwap = true;
+    [Header("Renderer swap")]
     [SerializeField] private bool autoCollectRenderers = true;
+
+    [Header("Sync (SAFE)")]
+    [Tooltip("Copies parameter values (bool/float/int) from currently visible animator to the other.")]
+    [SerializeField] private bool syncParametersOnSwap = true;
+
+    [Tooltip("Only enable if BOTH controllers have identical state names/structure. Not recommended for rig vs sprite.")]
+    [SerializeField] private bool syncStateTimeIfPossible = false;
+
+    [Header("Debug")]
+    [SerializeField] private bool verboseLogs = false;
 
     private Renderer[] modernRenderers;
     private Renderer[] retroRenderers;
+
+    [SerializeField] private Transform muzzleModern;
+    [SerializeField] private Transform muzzleRetro;
+    [SerializeField] private RangedAttackModule attack;
 
     private void Awake()
     {
@@ -28,7 +41,7 @@ public class EnemyStyleSwapListener : MonoBehaviour
             if (retroVisual) retroRenderers = retroVisual.GetComponentsInChildren<Renderer>(true);
         }
 
-        // Safety: keep animators updating even if hidden
+        // Keep both animators ticking even if hidden (critical!)
         if (modernAnimator) modernAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         if (retroAnimator) retroAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
     }
@@ -37,6 +50,8 @@ public class EnemyStyleSwapListener : MonoBehaviour
     {
         if (styleSwapEvent != null)
             styleSwapEvent.OnStyleSwap += OnStyleSwap;
+        else
+            Debug.LogWarning($"[{name}] styleSwapEvent not assigned.", this);
     }
 
     private void OnDisable()
@@ -47,18 +62,27 @@ public class EnemyStyleSwapListener : MonoBehaviour
 
     private void OnStyleSwap(StyleState state)
     {
+
         bool toModern = state == StyleState.Modern;
 
-        // Determine which animator is currently visible vs target
-        Animator fromA = toModern ? retroAnimator : modernAnimator;
-        Animator toA = toModern ? modernAnimator : retroAnimator;
+        if (attack != null)
+            attack.SetMuzzle(toModern ? muzzleModern : muzzleRetro);
 
-        if (syncAnimatorOnSwap && fromA != null && toA != null)
-            SyncAnimatorState(fromA, toA);
 
-        // Swap visibility (NOT GameObject active state)
+        Animator fromA = toModern ? retroAnimator : modernAnimator; // currently visible
+        Animator toA = toModern ? modernAnimator : retroAnimator; // becoming visible
+
+        if (syncParametersOnSwap && fromA != null && toA != null)
+            CopyParameters(fromA, toA);
+
+        if (syncStateTimeIfPossible && fromA != null && toA != null)
+            TrySyncStateTime(fromA, toA);
+
         SetRenderersEnabled(modernRenderers, toModern);
         SetRenderersEnabled(retroRenderers, !toModern);
+
+        if (verboseLogs)
+            Debug.Log($"[{name}] Visual swap -> {state}", this);
     }
 
     private void SetRenderersEnabled(Renderer[] rends, bool enabled)
@@ -68,16 +92,55 @@ public class EnemyStyleSwapListener : MonoBehaviour
             if (rends[i]) rends[i].enabled = enabled;
     }
 
-    private void SyncAnimatorState(Animator fromA, Animator toA)
+    private void CopyParameters(Animator fromA, Animator toA)
     {
-        // Assumes same layer structure (layer 0 at least)
-        var st = fromA.GetCurrentAnimatorStateInfo(0);
+        // Copy speed too
+        toA.speed = fromA.speed;
 
-        // Jump target animator to same state and time
+        foreach (var p in fromA.parameters)
+        {
+            // Only copy params that exist on the target animator (avoids warnings)
+            if (!HasParam(toA, p.nameHash)) continue;
+
+            switch (p.type)
+            {
+                case AnimatorControllerParameterType.Bool:
+                    toA.SetBool(p.nameHash, fromA.GetBool(p.nameHash));
+                    break;
+
+                case AnimatorControllerParameterType.Float:
+                    toA.SetFloat(p.nameHash, fromA.GetFloat(p.nameHash));
+                    break;
+
+                case AnimatorControllerParameterType.Int:
+                    toA.SetInteger(p.nameHash, fromA.GetInteger(p.nameHash));
+                    break;
+
+                case AnimatorControllerParameterType.Trigger:
+                    // Triggers can’t be "read". Don’t try to copy.
+                    // Use bools (like your isShooting) for cross-style sync.
+                    break;
+            }
+        }
+
+        // Force immediate evaluation so the first visible frame is correct
+        toA.Update(0f);
+    }
+
+    private bool HasParam(Animator a, int nameHash)
+    {
+        foreach (var p in a.parameters)
+            if (p.nameHash == nameHash) return true;
+        return false;
+    }
+
+    private void TrySyncStateTime(Animator fromA, Animator toA)
+    {
+        // Only safe if both controllers share the same state names/paths.
+        var st = fromA.GetCurrentAnimatorStateInfo(0);
+        // If target doesn't have this state, Play will log warnings - so bail.
+        // Unity doesn't give a direct "HasState" here without AnimatorController access, so keep this OFF for your setup.
         toA.Play(st.fullPathHash, 0, st.normalizedTime);
         toA.Update(0f);
-
-        // Copy speed too (important if you slow death / hit reactions)
-        toA.speed = fromA.speed;
     }
 }

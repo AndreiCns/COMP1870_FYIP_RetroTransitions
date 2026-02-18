@@ -6,10 +6,11 @@ public class GameAudioManager : MonoBehaviour
     [Header("Music Source")]
     [SerializeField] private AudioSource musicSource;
 
-    [Header("Music Clip (same clip for both styles)")]
+    [Header("Music Clip")]
+    // Same track in both modes — style change is done through the mixer.
     [SerializeField] private AudioClip musicClip;
 
-    [Header("Audio Mixer Snapshots")]
+    [Header("Mixer Snapshots")]
     [SerializeField] private AudioMixerSnapshot modernSnapshot;
     [SerializeField] private AudioMixerSnapshot retroSnapshot;
 
@@ -17,6 +18,7 @@ public class GameAudioManager : MonoBehaviour
 
     private void Start()
     {
+        // Start music once at runtime
         if (musicSource != null && musicClip != null)
         {
             musicSource.clip = musicClip;
@@ -24,7 +26,7 @@ public class GameAudioManager : MonoBehaviour
             musicSource.Play();
         }
 
-        PlayModern();
+        PlayModern(); // default state
     }
 
     public void PlayModern()

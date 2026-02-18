@@ -15,6 +15,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private PlayerShootModule modernShoot;
     [SerializeField] private PlayerShootModule retroShoot;
 
+    // Uses whichever shoot module is currently active
     private PlayerShootModule ActiveShoot =>
         (modernShoot != null && modernShoot.gameObject.activeInHierarchy) ? modernShoot :
         (retroShoot != null && retroShoot.gameObject.activeInHierarchy) ? retroShoot :
@@ -22,7 +23,7 @@ public class FirstPersonController : MonoBehaviour
 
     private readonly string shootTrigger = "Fire";
 
-    [Header("Movement SFX (ONE source for footsteps + jump + landing)")]
+    [Header("Movement SFX")]
     [SerializeField] private AudioSource movementSfxSource;
     [SerializeField] private AudioClip[] footstepClips;
     [SerializeField] private float stepInterval = 0.5f;
@@ -34,6 +35,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float landingVolume = 1f;
 
     [Header("Retro Audio")]
+    // Quick “retro” muffling on movement sounds
     [SerializeField] private AudioLowPassFilter movementLowPass;
     [SerializeField] private StyleSwapEvent styleSwapEvent;
     [SerializeField] private float retroCutoff = 1200f;
@@ -91,11 +93,12 @@ public class FirstPersonController : MonoBehaviour
 
         if (movementSfxSource == null)
         {
-            Debug.LogError("[FPC] movementSfxSource is not assigned. Assign one AudioSource for movement SFX.");
+            Debug.LogError("[FPC] movementSfxSource not assigned.", this);
             enabled = false;
             return;
         }
 
+        // Low-pass sits on the same object as the movement AudioSource
         if (movementLowPass == null)
             movementLowPass = movementSfxSource.GetComponent<AudioLowPassFilter>();
 
@@ -108,10 +111,10 @@ public class FirstPersonController : MonoBehaviour
         if (styleSwapEvent != null)
             styleSwapEvent.OnStyleSwap += OnStyleChanged;
         else
-            Debug.LogWarning("[FPC] styleSwapEvent is NULL. Assign the SAME GlobalStyleSwapEvent asset used by StyleSwapManager.");
+            Debug.LogWarning("[FPC] styleSwapEvent not assigned.", this);
 
         if (verboseLogs)
-            Debug.Log($"[FPC] OnEnable. movementSfxSource={movementSfxSource.name}, lowPass={(movementLowPass ? "OK" : "NULL")}");
+            Debug.Log($"[FPC] movementSfxSource={movementSfxSource.name}, lowPass={(movementLowPass ? "OK" : "NULL")}");
     }
 
     private void OnDisable()
@@ -122,9 +125,10 @@ public class FirstPersonController : MonoBehaviour
 
     private void Start()
     {
+        // If these are missing, I’d rather fail early than hunt nulls later
         if (cam == null || playerCamera == null || weaponHolder == null || weaponRecoil == null)
         {
-            Debug.LogError($"[FPC] Missing required references on '{gameObject.name}'.");
+            Debug.LogError($"[FPC] Missing required references on '{gameObject.name}'.", this);
             enabled = false;
             return;
         }
@@ -145,6 +149,7 @@ public class FirstPersonController : MonoBehaviour
     public void OnJump(InputAction.CallbackContext ctx)
     {
         if (!ctx.performed) return;
+
         if (controller.isGrounded || jumpCount < maxJumps)
             Jump();
     }
@@ -153,6 +158,7 @@ public class FirstPersonController : MonoBehaviour
     {
         if (!ctx.performed) return;
 
+        // Shoot module gates the fire timing
         var shoot = ActiveShoot;
         if (shoot != null && !shoot.TryBeginFire())
             return;
@@ -160,6 +166,7 @@ public class FirstPersonController : MonoBehaviour
         weaponAnimator.SetTrigger(shootTrigger);
         weaponStyleSwap?.Fire();
 
+        // Recoil is smoothed in LateUpdate
         recoilTargetPos -= new Vector3(0, 0, recoilKickback);
         recoilTargetRot += new Vector3(-recoilUp, 0, 0);
     }
@@ -195,7 +202,7 @@ public class FirstPersonController : MonoBehaviour
     {
         bool isGroundedNow = controller.isGrounded;
 
-        // Landing detection (air -> ground with downward speed)
+        // Landing check: air -> ground with some downward speed
         if (!wasGrounded && isGroundedNow && velocity.y < -2f)
             PlayLandingSFX();
 
@@ -203,7 +210,7 @@ public class FirstPersonController : MonoBehaviour
 
         if (controller.isGrounded && velocity.y < 0f)
         {
-            velocity.y = -2f;
+            velocity.y = -2f; // helps the controller stick to ground
             jumpCount = 0;
         }
 
@@ -235,6 +242,7 @@ public class FirstPersonController : MonoBehaviour
     private void PlayJumpSFX()
     {
         if (jumpClip == null) return;
+
         movementSfxSource.pitch = Random.Range(0.95f, 1.05f);
         movementSfxSource.PlayOneShot(jumpClip, jumpVolume);
     }
@@ -242,6 +250,7 @@ public class FirstPersonController : MonoBehaviour
     private void PlayLandingSFX()
     {
         if (landingClip == null) return;
+
         movementSfxSource.pitch = Random.Range(0.9f, 1.0f);
         movementSfxSource.PlayOneShot(landingClip, landingVolume);
     }
@@ -333,7 +342,7 @@ public class FirstPersonController : MonoBehaviour
     private void OnStyleChanged(StyleState newState)
     {
         if (verboseLogs)
-            Debug.Log($"[FPC] OnStyleChanged -> {newState}");
+            Debug.Log($"[FPC] Style -> {newState}");
 
         ApplyMovementFilter(newState == StyleState.Retro);
     }

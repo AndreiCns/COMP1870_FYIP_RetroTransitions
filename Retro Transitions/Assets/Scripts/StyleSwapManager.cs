@@ -17,10 +17,11 @@ public class StyleSwapManager : MonoBehaviour
 
     private void OnEnable()
     {
+        // Optional hotkey for quick testing
         if (toggleStyleAction != null)
             toggleStyleAction.action.performed += OnTogglePressed;
 
-        // Apply current style AFTER listeners have subscribed
+        // Raise initial style after one frame so listeners are ready
         StartCoroutine(RaiseInitialStyleNextFrame());
     }
 
@@ -32,8 +33,8 @@ public class StyleSwapManager : MonoBehaviour
 
     private IEnumerator RaiseInitialStyleNextFrame()
     {
-        yield return null; // wait 1 frame so OnEnable subscriptions happen
-        RaiseStyle(currentState, reason: "Initial");
+        yield return null; // wait one frame
+        RaiseStyle(currentState, "Initial");
     }
 
     private void OnTogglePressed(InputAction.CallbackContext ctx)
@@ -44,29 +45,30 @@ public class StyleSwapManager : MonoBehaviour
     public void ToggleStyle()
     {
         currentState = (currentState == StyleState.Modern) ? StyleState.Retro : StyleState.Modern;
-        RaiseStyle(currentState, reason: "Toggle");
+        RaiseStyle(currentState, "Toggle");
     }
 
     public void ForceStyle(StyleState state)
     {
         currentState = state;
-        RaiseStyle(currentState, reason: "Force");
+        RaiseStyle(currentState, "Force");
     }
 
     private void RaiseStyle(StyleState state, string reason)
     {
         if (styleSwapEvent == null)
         {
-            Debug.LogError("[StyleSwapManager] styleSwapEvent is NULL. Assign the same GlobalStyleSwapEvent asset used by listeners.");
+            Debug.LogError("[StyleSwapManager] styleSwapEvent is NULL. Assign the shared StyleSwapEvent asset.");
             return;
         }
 
         if (verboseLogs)
-            Debug.Log($"[StyleSwapManager] {reason} raise -> {state} | event='{styleSwapEvent.name}' id={styleSwapEvent.GetInstanceID()}");
+            Debug.Log($"[StyleSwapManager] {reason} -> {state}");
 
+        // Broadcast style change
         styleSwapEvent.Raise(state);
 
-        // Optional: switch music / ambience based on state
+        // Sync audio snapshot with visual mode
         var audio = FindFirstObjectByType<GameAudioManager>();
         if (audio != null)
         {

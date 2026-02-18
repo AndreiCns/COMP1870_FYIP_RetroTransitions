@@ -14,6 +14,7 @@ public class WeaponStyleSwap : MonoBehaviour
 
     private void Awake()
     {
+        // Cache animators once
         if (modernWeapon != null)
             modernAnim = modernWeapon.GetComponentInChildren<Animator>();
 
@@ -37,6 +38,7 @@ public class WeaponStyleSwap : MonoBehaviour
     {
         bool isRetro = newState == StyleState.Retro;
 
+        // Just toggle which weapon is visible
         if (modernWeapon != null)
             modernWeapon.SetActive(!isRetro);
 
@@ -46,6 +48,7 @@ public class WeaponStyleSwap : MonoBehaviour
 
     public void Fire()
     {
+        // Forward fire trigger to whichever weapon is currently active
         if (retroWeapon != null && retroWeapon.activeSelf)
             retroAnim?.SetTrigger("Fire");
         else

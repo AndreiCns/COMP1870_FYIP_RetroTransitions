@@ -16,17 +16,20 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
     [SerializeField] private float aimHeightOffset = 1.2f;
 
     [Header("Animation")]
+    // Drives the looping shoot state
     [SerializeField] private string isShootingBool = "isShooting";
-    [SerializeField] private float shootStateTime = 0.25f; // how long we keep isShooting true
 
     private float fireTimer;
-    private float shootTimer;
-    private bool shotArmed;              // <- only allow ONE event per shot
+
+    // Ensures only one projectile is spawned per shot cycle
+    private bool shotArmed;
+
     private Transform currentTarget;
     private EnemyVisualAnimatorProxy animProxy;
     private float attackRangeSqr;
-    public void SetMuzzle(Transform newMuzzle) => muzzle = newMuzzle;
 
+    // Updated on style swap so we spawn from the correct model
+    public void SetMuzzle(Transform newMuzzle) => muzzle = newMuzzle;
 
     private void Awake()
     {
@@ -36,19 +39,14 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
 
     private void Update()
     {
+        // Simple cooldown
         fireTimer -= Time.deltaTime;
-
-        if (shootTimer > 0f)
-        {
-            shootTimer -= Time.deltaTime;
-            if (shootTimer <= 0f)
-                animProxy?.SetBool(isShootingBool, false);
-        }
     }
 
     public bool CanAttack(Transform target)
     {
         if (target == null) return false;
+
         Vector3 delta = target.position - transform.position;
         return delta.sqrMagnitude <= attackRangeSqr;
     }
@@ -63,28 +61,24 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
 
         currentTarget = target;
 
-        // Arm exactly ONE event spawn for this shot cycle
         shotArmed = true;
 
-        // Drive animation (bool version)
+        // Stay in shoot state while target is valid
         animProxy?.SetBool(isShootingBool, true);
-        shootTimer = shootStateTime;
 
-        // Start cooldown immediately
         fireTimer = fireCooldown;
     }
 
-    // Animation Event calls this (via relay)
-    public void FireProjectile_AnimEvent()
+    // Called by animation event at the fire frame
+    public void FireProjectile()
     {
-        // If we already spawned for this shot cycle, ignore duplicates
         if (!shotArmed) return;
         shotArmed = false;
 
-        FireProjectileInternal();
+        SpawnProjectile();
     }
 
-    private void FireProjectileInternal()
+    private void SpawnProjectile()
     {
         if (projectilePrefab == null || muzzle == null) return;
         if (currentTarget == null) return;
@@ -96,5 +90,20 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
 
         if (projGO.TryGetComponent(out Projectile proj))
             proj.Init(dir, projectileSpeed, damage, gameObject);
+    }
+
+    // Called at the end of the shoot animation
+    public void OnShootAnimFinished()
+    {
+        if (currentTarget == null)
+        {
+            animProxy?.SetBool(isShootingBool, false);
+            return;
+        }
+
+        if (CanAttack(currentTarget))
+            return;
+
+        animProxy?.SetBool(isShootingBool, false);
     }
 }

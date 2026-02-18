@@ -7,6 +7,7 @@ public class Health : MonoBehaviour, IDamageable
     [SerializeField] private float maxHealth = 50f;
 
     [Header("Events")]
+    // Lets other systems react without hard references
     [SerializeField] private UnityEvent<float> onDamaged;
     [SerializeField] private UnityEvent onDied;
 
@@ -14,7 +15,7 @@ public class Health : MonoBehaviour, IDamageable
     public float Current { get; private set; }
     public bool IsDead => Current <= 0f;
 
-    // Read-only exposure for other scripts (fixes your CS1061)
+    // Exposed as read-only so other scripts can subscribe
     public UnityEvent<float> OnDamaged => onDamaged;
     public UnityEvent OnDied => onDied;
 
@@ -26,10 +27,10 @@ public class Health : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount, DamageInfo info)
     {
-        if (IsDead) return;
-        if (amount <= 0f) return;
+        if (IsDead || amount <= 0f) return;
 
         Current = Mathf.Max(0f, Current - amount);
+
         onDamaged?.Invoke(amount);
 
         if (IsDead)

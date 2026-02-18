@@ -13,7 +13,7 @@ public class MuzzleFlashController : MonoBehaviour
 
     [Header("Retro")]
     [SerializeField] private SpriteRenderer retroSpritePrefab;
-    [SerializeField] private float retroLife = 0.06f;     // short, punchy
+    [SerializeField] private float retroLife = 0.06f;   // very short pop
     [SerializeField] private float retroScale = 1.0f;
     [SerializeField] private bool randomFlipX = true;
 
@@ -27,27 +27,25 @@ public class MuzzleFlashController : MonoBehaviour
     {
         currentStyle = style;
 
-        // If we switch to Retro, ensure modern particles are not lingering
+        // Make sure modern particles aren't lingering when switching to retro
         if (currentStyle == VisualStyle.Retro)
             StopModernVFX();
     }
 
-    // Call this on fire (anim event)
+    // Called from weapon fire (animation event)
     public void Play()
     {
         if (muzzle == null)
         {
-            if (logWarnings) Debug.LogWarning($"{name}: MuzzleFlashController missing muzzle reference.", this);
+            if (logWarnings)
+                Debug.LogWarning($"{name}: Missing muzzle reference.", this);
             return;
         }
 
         if (currentStyle == VisualStyle.Modern)
-        {
             PlayModern();
-        }
         else
         {
-            // Defensive: ensure modern systems never show in retro mode
             StopModernVFX();
             PlayRetro();
         }
@@ -55,6 +53,7 @@ public class MuzzleFlashController : MonoBehaviour
 
     private void PlayModern()
     {
+        // Re-align to muzzle each shot (weapon moves with recoil/bob)
         if (modernFlash != null)
         {
             modernFlash.transform.SetPositionAndRotation(muzzle.position, muzzle.rotation);
@@ -73,18 +72,15 @@ public class MuzzleFlashController : MonoBehaviour
         if (retroSpritePrefab == null)
         {
             if (logWarnings)
-                Debug.LogWarning($"{name}: Retro style selected but retroSpritePrefab is not assigned.", this);
+                Debug.LogWarning($"{name}: Retro sprite not assigned.", this);
             return;
         }
 
-        // Spawn as CHILD of muzzle so it follows weapon
+        // Spawn as child so it follows the weapon naturally
         SpriteRenderer sr = Instantiate(retroSpritePrefab, muzzle);
 
-        sr.transform.localPosition = Vector3.zero;
-        sr.transform.localPosition += Vector3.forward * 0.05f;
-
+        sr.transform.localPosition = Vector3.forward * 0.05f;
         sr.transform.localRotation = Quaternion.identity;
-
         sr.transform.localScale = Vector3.one * retroScale;
 
         if (randomFlipX)
@@ -92,7 +88,6 @@ public class MuzzleFlashController : MonoBehaviour
 
         Destroy(sr.gameObject, retroLife);
     }
-
 
     private void StopModernVFX()
     {

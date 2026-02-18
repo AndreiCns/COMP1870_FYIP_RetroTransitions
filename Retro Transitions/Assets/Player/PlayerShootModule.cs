@@ -28,8 +28,10 @@ public class PlayerShootModule : MonoBehaviour
 
     private void Awake()
     {
+        // Use root as damage source (not just the weapon child)
         owner = transform.root.gameObject;
 
+        // Quick sanity checks
         if (playerCamera == null && logWarnings)
             Debug.LogWarning($"{name}: playerCamera not assigned", this);
         if (muzzle == null && logWarnings)
@@ -38,15 +40,16 @@ public class PlayerShootModule : MonoBehaviour
             Debug.LogWarning($"{name}: gunshotSource not assigned", this);
     }
 
-    // Called by your INPUT (before setting animator trigger)
+    // Called from input before triggering the fire animation
     public bool TryBeginFire()
     {
         if (!canFire) return false;
+
         canFire = false;
         return true;
     }
 
-    // CALLED BY ANIMATION EVENT (at firing frame)
+    // Called by animation event at the firing frame
     public void FireProjectile()
     {
         if (playerCamera == null) return;
@@ -62,6 +65,7 @@ public class PlayerShootModule : MonoBehaviour
         Vector3 origin = playerCamera.transform.position;
         Vector3 direction = playerCamera.transform.forward;
 
+        // Simple hitscan from camera
         if (Physics.Raycast(origin, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
         {
             if (drawDebugRay)
@@ -77,20 +81,19 @@ public class PlayerShootModule : MonoBehaviour
                 });
             }
         }
-        else
+        else if (drawDebugRay)
         {
-            if (drawDebugRay)
-                Debug.DrawRay(origin, direction * range, Color.yellow, 1f);
+            Debug.DrawRay(origin, direction * range, Color.yellow, 1f);
         }
     }
 
-    // CALLED BY ANIMATION EVENT (last frame of shoot anim)
+    // Called at the end of the shoot animation
     public void OnShootAnimFinished()
     {
         canFire = true;
     }
 
-    // Safety: if weapon gets disabled mid-shot
+    // Reset if weapon gets disabled mid-shot
     private void OnDisable()
     {
         canFire = true;

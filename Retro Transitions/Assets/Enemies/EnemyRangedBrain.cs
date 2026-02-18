@@ -4,6 +4,7 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyRangedBrain : MonoBehaviour
 {
+    // Tiny FSM: wait -> engage -> stop completely on death
     private enum State { Idle, Chase, Dead }
 
     [Header("Core")]
@@ -12,7 +13,8 @@ public class EnemyRangedBrain : MonoBehaviour
     [SerializeField] private EnemyVisualAnimatorProxy animProxy;
 
     [Header("Combat")]
-    [SerializeField] private MonoBehaviour attackModuleBehaviour; // must implement IEnemyAttack
+    // Script on this enemy that actually handles cooldown + projectile spawning
+    [SerializeField] private MonoBehaviour attackModuleBehaviour;
     private IEnemyAttack attackModule;
 
     [Header("Ranges")]
@@ -28,21 +30,28 @@ public class EnemyRangedBrain : MonoBehaviour
 
     [Header("Animation Parameters")]
     [SerializeField] private string isWalkingParam = "isWalking";
-    [SerializeField] private string isShootingParam = "isShooting";
 
     private NavMeshAgent agent;
     private State state = State.Idle;
 
+    private float aggroRangeSqr;
+
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+
+        // Keeps animation calls consistent across modern/retro visuals
         if (animProxy == null)
             animProxy = GetComponent<EnemyVisualAnimatorProxy>();
 
         attackModule = attackModuleBehaviour as IEnemyAttack;
+        if (attackModule == null)
+            Debug.LogError($"[{name}] EnemyRangedBrain: attackModuleBehaviour missing or not implementing IEnemyAttack.", this);
 
         if (health != null)
             health.OnDied.AddListener(OnDied);
+
+        aggroRangeSqr = aggroRange * aggroRange;
 
         agent.isStopped = true;
         agent.ResetPath();
@@ -59,8 +68,10 @@ public class EnemyRangedBrain : MonoBehaviour
         if (state == State.Dead) return;
         if (target == null || attackModule == null) return;
 
-        float dist = Vector3.Distance(transform.position, target.position);
-        bool inAggro = dist <= aggroRange;
+        Vector3 delta = target.position - transform.position;
+        float distSqr = delta.sqrMagnitude;
+
+        bool inAggro = distSqr <= aggroRangeSqr;
         bool hasLos = !requireLineOfSight || HasLineOfSight(target);
 
         switch (state)
@@ -68,30 +79,30 @@ public class EnemyRangedBrain : MonoBehaviour
             case State.Idle:
                 agent.isStopped = true;
                 SetWalking(false);
-                SetShooting(false);
 
                 if (inAggro && hasLos)
                     state = State.Chase;
+
                 break;
 
             case State.Chase:
                 FaceTarget(target);
 
+                // Hysteresis avoids jitter around the stop distance
                 float moveAt = stopDistance + distanceHysteresis;
                 float stopAt = Mathf.Max(0f, stopDistance - distanceHysteresis);
 
                 bool inAttackRange = attackModule.CanAttack(target);
 
-                if (dist > moveAt)
+                if (distSqr > moveAt * moveAt)
                 {
                     agent.isStopped = false;
                     agent.stoppingDistance = stopDistance;
                     agent.SetDestination(target.position);
 
                     SetWalking(true);
-                    SetShooting(false);
                 }
-                else if (dist < stopAt)
+                else if (distSqr < stopAt * stopAt)
                 {
                     agent.isStopped = true;
                     agent.ResetPath();
@@ -101,15 +112,11 @@ public class EnemyRangedBrain : MonoBehaviour
 
                 if (inAttackRange)
                 {
+                    // Stop and let the attack module handle timing + anim events
                     agent.isStopped = true;
                     SetWalking(false);
-                    SetShooting(true);
 
                     attackModule.TickAttack(target);
-                }
-                else
-                {
-                    SetShooting(false);
                 }
 
                 break;
@@ -118,25 +125,26 @@ public class EnemyRangedBrain : MonoBehaviour
 
     private bool HasLineOfSight(Transform t)
     {
+        // Optional eye point; otherwise use a simple height offset
         Vector3 origin = eyes != null ? eyes.position : transform.position + Vector3.up * eyeHeightFallback;
         Vector3 targetPos = t.position + Vector3.up * 1.1f;
 
-        Vector3 dir = (targetPos - origin);
+        Vector3 dir = targetPos - origin;
         float dist = dir.magnitude;
+
         if (dist <= 0.001f) return true;
 
         dir /= dist;
 
         if (Physics.Raycast(origin, dir, out RaycastHit hit, dist, lineOfSightMask, QueryTriggerInteraction.Ignore))
-        {
             return hit.transform == t || hit.transform.root == t.root;
-        }
 
         return false;
     }
 
     private void FaceTarget(Transform t)
     {
+        // Keep rotation flat (especially important for billboards)
         Vector3 flat = t.position - transform.position;
         flat.y = 0f;
 
@@ -151,11 +159,6 @@ public class EnemyRangedBrain : MonoBehaviour
         animProxy?.SetBool(isWalkingParam, value);
     }
 
-    private void SetShooting(bool value)
-    {
-        animProxy?.SetBool(isShootingParam, value);
-    }
-
     private void OnDied()
     {
         state = State.Dead;
@@ -167,6 +170,5 @@ public class EnemyRangedBrain : MonoBehaviour
         }
 
         SetWalking(false);
-        SetShooting(false);
     }
 }

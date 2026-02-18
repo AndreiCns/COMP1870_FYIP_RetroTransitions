@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -5,8 +6,8 @@ public class PlayerDeathHandler : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private Health health;
-    [SerializeField] private Animator animator; // optional (camera/arms animator)
-    [SerializeField] private MonoBehaviour[] disableOnDeath; // controller, weapon scripts, input, etc.
+    [SerializeField] private Animator animator; // optional
+    [SerializeField] private MonoBehaviour[] disableOnDeath;
 
     [Header("Animation")]
     [SerializeField] private string dieTrigger = "Die";
@@ -18,13 +19,13 @@ public class PlayerDeathHandler : MonoBehaviour
     [SerializeField] private float reloadDelay = 2.0f;
 
     private bool dead;
+    private Coroutine reloadRoutine;
 
     private void Awake()
     {
         if (health == null) health = GetComponent<Health>();
 
-        // If your animator is on weapon/camera, assign it in inspector.
-        // This fallback is safe but may find the wrong animator if you have multiple.
+        // Inspector is best, this is just a fallback
         if (animator == null) animator = GetComponentInChildren<Animator>();
 
         if (health != null)
@@ -42,34 +43,38 @@ public class PlayerDeathHandler : MonoBehaviour
         if (dead) return;
         dead = true;
 
-        // Disable gameplay scripts
+        // Stop gameplay scripts
         if (disableOnDeath != null)
         {
             foreach (var b in disableOnDeath)
                 if (b != null) b.enabled = false;
         }
 
-        // Play death animation (optional)
+        // Optional death trigger
         if (animator != null && !string.IsNullOrEmpty(dieTrigger))
             animator.SetTrigger(dieTrigger);
 
-        // Testing convenience
         if (unlockCursorOnDeath)
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
 
+        // Use realtime wait so reload still happens even if timescale is 0
+        if (reloadSceneAfterDelay)
+        {
+            if (reloadRoutine != null) StopCoroutine(reloadRoutine);
+            reloadRoutine = StartCoroutine(ReloadAfterDelayRealtime(reloadDelay));
+        }
+
         if (freezeTimeOnDeath)
             Time.timeScale = 0f;
-
-        if (reloadSceneAfterDelay)
-            Invoke(nameof(ReloadScene), reloadDelay);
     }
 
-    private void ReloadScene()
+    private IEnumerator ReloadAfterDelayRealtime(float delay)
     {
-        // If timeScale is 0, Invoke won’t tick. So unfreeze before reload.
+        yield return new WaitForSecondsRealtime(delay);
+
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }

@@ -4,9 +4,9 @@ public class Projectile : MonoBehaviour
 {
     [Header("Config")]
     [SerializeField] private float lifeTime = 4f;
-    [SerializeField] private LayerMask hitMask = ~0; // default: hit everything
+    [SerializeField] private LayerMask hitMask = ~0;
 
-    // Runtime state
+    // Runtime values set on spawn
     private Vector3 dir = Vector3.forward;
     private float speed = 0f;
     private float damage = 0f;
@@ -17,7 +17,7 @@ public class Projectile : MonoBehaviour
 
     public void Init(Vector3 direction, float newSpeed, float newDamage, GameObject newSource)
     {
-        // Validate & normalise
+        // Clamp inputs so bad values don’t cause weird behaviour
         dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
         speed = Mathf.Max(0f, newSpeed);
         damage = Mathf.Max(0f, newDamage);
@@ -29,7 +29,7 @@ public class Projectile : MonoBehaviour
 
     private void OnEnable()
     {
-        // Prevent pooled projectiles from inheriting old state
+        // Reset in case this is reused later (e.g. pooling)
         isInitialised = false;
         remainingLife = Mathf.Max(0.01f, lifeTime);
     }
@@ -38,7 +38,7 @@ public class Projectile : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
-        // Lifetime handling (more pool-friendly than Destroy + Invoke)
+        // Kill after lifetime expires
         remainingLife -= dt;
         if (remainingLife <= 0f)
         {
@@ -46,10 +46,10 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        // If Init() was never called, fail loudly (helps debugging)
+        // If Init was never called, don’t let it exist
         if (!isInitialised)
         {
-            Debug.LogWarning($"Projectile '{name}' was never initialised. Destroying to avoid stray objects.");
+            Debug.LogWarning($"Projectile '{name}' was never initialised.");
             Destroy(gameObject);
             return;
         }
@@ -58,13 +58,11 @@ public class Projectile : MonoBehaviour
         Vector3 step = dir * speed * dt;
         float dist = step.magnitude;
 
-        // If speed is 0, don't raycast/move
         if (dist <= 0.0001f) return;
 
-        // Raycast step to avoid tunneling
+        // Raycast per step to avoid tunnelling
         if (Physics.Raycast(start, dir, out RaycastHit hit, dist, hitMask, QueryTriggerInteraction.Ignore))
         {
-            // Snap to hit point for correct VFX placement later
             transform.position = hit.point;
 
             TryApplyDamage(hit);
@@ -79,9 +77,8 @@ public class Projectile : MonoBehaviour
     {
         if (hit.collider == null) return;
 
-        // Don’t damage self
+        // Ignore hits on the shooter
         if (source != null && hit.collider.transform.IsChildOf(source.transform)) return;
-
         if (damage <= 0f) return;
 
         if (hit.collider.TryGetComponent(out IDamageable dmg))

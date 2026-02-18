@@ -6,20 +6,23 @@ public class EnemyAnimEventRelay : MonoBehaviour
 
     private void Awake()
     {
+        // Animation lives on the child, shooting logic lives on the root.
+        // Cache once so events can forward cleanly.
         attackModule = GetComponentInParent<RangedAttackModule>(true);
+
         if (attackModule == null)
             Debug.LogError($"[{name}] EnemyAnimEventRelay: No RangedAttackModule found in parents.", this);
     }
 
-    // If your Animation Event is still named "FireProjectile"
+    // Called from the fire frame in the animation
     public void FireProjectile()
     {
-        attackModule?.FireProjectile_AnimEvent();
+        attackModule?.FireProjectile();
     }
 
-    // If you renamed the Animation Event to "FireProjectile_AnimEvent"
-    public void FireProjectile_AnimEvent()
+    // Called on the last frame of the shoot animation
+    public void OnShootAnimFinished()
     {
-        attackModule?.FireProjectile_AnimEvent();
+        attackModule?.OnShootAnimFinished();
     }
 }

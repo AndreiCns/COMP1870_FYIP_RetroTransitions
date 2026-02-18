@@ -6,11 +6,13 @@ public class EnemyVisualAnimatorProxy : MonoBehaviour
     [SerializeField] private Animator modernAnimator;
     [SerializeField] private Animator retroAnimator;
 
-    [Header("Drive both (recommended for style swapping)")]
+    [Header("Drive both")]
+    // When true, both animators get the same parameters (helps during style swaps).
     [SerializeField] private bool driveBothAnimators = true;
 
     public void SetStyleAnimators(Animator modern, Animator retro)
     {
+        // Optional runtime reassignment
         modernAnimator = modern;
         retroAnimator = retro;
     }

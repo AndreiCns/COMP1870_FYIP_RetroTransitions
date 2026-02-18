@@ -27,7 +27,7 @@ namespace CRTPostprocess.Sample
 
         private bool _featureActive;
         private NTSCPostprocessHDRP.CrossTalkMode _crossTalkModeDefault;
-        private NTSCPostprocessHDRP.GaussianBlurWidth _gaussianBlurWidthDefault;
+        private NTSCPostprocessHDRP.BlurWidth _blurWidthDefault;
         private bool _curvatureDefault;
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -40,7 +40,7 @@ namespace CRTPostprocess.Sample
             {
                 #if UNITY_2023_2_OR_NEWER
                 _crossTalkModeDefault = _profile.crossTalkMode.value;
-                _gaussianBlurWidthDefault = _profile.gaussianBlurWidth.value;
+                _blurWidthDefault = _profile.blurWidth.value;
                 #else
                 _crossTalkModeDefault = (NTSCPostprocessHDRP.CrossTalkMode)_profile.crossTalkMode.value;
                 _gaussianBlurWidthDefault = (NTSCPostprocessHDRP.GaussianBlurWidth)_profile.gaussianBlurWidth.value;
@@ -49,7 +49,7 @@ namespace CRTPostprocess.Sample
                 _featureActive = _profile.enable.value;
                 
                 _profile.crossTalkMode.overrideState = true;
-                _profile.gaussianBlurWidth.overrideState = true;
+                _profile.blurWidth.overrideState = true;
                 _profile.curvature.overrideState = true;
                 _profile.enable.overrideState = true;
             }
@@ -65,7 +65,7 @@ namespace CRTPostprocess.Sample
             {
                 #if UNITY_2023_2_OR_NEWER
                 _profile.crossTalkMode.value = _crossTalkModeDefault;
-                _profile.gaussianBlurWidth.value = _gaussianBlurWidthDefault;
+                _profile.blurWidth.value = _blurWidthDefault;
                 #else
                 _profile.crossTalkMode.value = (int)_crossTalkModeDefault;
                 _profile.gaussianBlurWidth.value = (int)_gaussianBlurWidthDefault;
@@ -74,7 +74,7 @@ namespace CRTPostprocess.Sample
                 _profile.enable.value = _featureActive;
 
                 _profile.crossTalkMode.overrideState = false;
-                _profile.gaussianBlurWidth.overrideState = false;
+                _profile.blurWidth.overrideState = false;
                 _profile.curvature.overrideState = false;
                 _profile.enable.overrideState = false;
             }
@@ -91,7 +91,7 @@ namespace CRTPostprocess.Sample
                 // Update Text for Info
                 string t = "Cross-Talk: " + (NTSCPostprocessHDRP.CrossTalkMode)(_currentCrossTalkMode + 1);
                 t += ", Curvature: " + (_currentCurvature ? "ON" : "OFF");
-                t += ", GaussWidth: " + (NTSCPostprocessHDRP.GaussianBlurWidth)_currentGaussianBlurWidthMode;
+                t += ", GaussWidth: " + (NTSCPostprocessHDRP.BlurWidth)_currentGaussianBlurWidthMode;
                 textForInfo.text = t;
             }
         }
@@ -129,7 +129,7 @@ namespace CRTPostprocess.Sample
                 {
                     if (_profile != null) _profile.enable.value = true;
                     SetNTSC(_currentCurvature, (NTSCPostprocessHDRP.CrossTalkMode)(_currentCrossTalkMode + 1),
-                        (NTSCPostprocessHDRP.GaussianBlurWidth)_currentGaussianBlurWidthMode);
+                        (NTSCPostprocessHDRP.BlurWidth)_currentGaussianBlurWidthMode);
                 }
 
                 UpdateTextForInfo();
@@ -146,12 +146,12 @@ namespace CRTPostprocess.Sample
             sampleData[_index].SetActive(true);
         }
 
-        void SetNTSC(bool _curvature, NTSCPostprocessHDRP.CrossTalkMode _crossTalkMode, NTSCPostprocessHDRP.GaussianBlurWidth _gaussianBlurWidth)
+        void SetNTSC(bool _curvature, NTSCPostprocessHDRP.CrossTalkMode _crossTalkMode, NTSCPostprocessHDRP.BlurWidth blurWidth)
         {
             if (_profile == null) return;
             #if UNITY_2023_2_OR_NEWER
             _profile.crossTalkMode.value = _crossTalkMode;
-            _profile.gaussianBlurWidth.value = _gaussianBlurWidth;
+            _profile.blurWidth.value = blurWidth;
             #else
             _profile.crossTalkMode.value = (int)_crossTalkMode;
             _profile.gaussianBlurWidth.value = (int)_gaussianBlurWidth;

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 #if UNITY_PIPELINE_URP
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -17,7 +18,7 @@ namespace CRTPostprocess
         public float fringeStrength = 0.75f;
         public float chromaModFrequencyScale = 1f;
         public float chromaPhaseShiftScale = 1f;
-        public NTSCPass.GaussianBlurWidth gaussianBlurWidth = NTSCPass.GaussianBlurWidth.TAP8;
+        [FormerlySerializedAs("gaussianBlurWidth")] public NTSCPass.BlurWidth blurWidth = NTSCPass.BlurWidth.Medium;
         public bool curvature = true;
         public bool cornerMask = true;
         [Tooltip("Non curvature mode uses this parameter.")] public int cornerRadius = 16;
@@ -48,10 +49,10 @@ namespace CRTPostprocess
                 _param.bufferHeight = volume.bufferHeight.value;
                 _param.outputHeight = volume.outputHeight.value;
                 #if UNITY_2023_2_OR_NEWER
-                _param.gaussianBlurWidth = volume.gaussianBlurWidth.value;
+                _param.blurWidth = volume.blurWidth.value;
                 _param.crossTalkMode = volume.crossTalkMode.value;
                 #else
-                _param.gaussianBlurWidth = (NTSCPass.GaussianBlurWidth)volume.gaussianBlurWidth.value;
+                _param.blurWidth = (NTSCPass.BlurWidth)volume.blurWidth.value;
                 _param.crossTalkMode = (NTSCPass.CrossTalkMode)volume.crossTalkMode.value;
                 #endif
                 _param.crossTalkStrength = volume.crossTalkStrength.value;
@@ -78,7 +79,7 @@ namespace CRTPostprocess
             {
                 _param.bufferHeight = bufferHeight;
                 _param.outputHeight = outputHeight;
-                _param.gaussianBlurWidth = gaussianBlurWidth;
+                _param.blurWidth = blurWidth;
                 _param.crossTalkMode = crossTalkMode;
                 _param.crossTalkStrength = crossTalkStrength;
                 _param.brightness = brightness;

@@ -19,7 +19,7 @@ Shader "Hidden/NTSCPass"
         _OverscanScale("OverscanScale", Float) = 0.985
         _MaskRadius("MaskRadius", Float) = 16
         [KeywordEnum(NONE,VERTICAL,SLANT,SLANT_NOIZE)] CrossTalk("Cross-Talk Mode", Float) = 1
-        [KeywordEnum(TAP4,TAP8,TAP24)] TapSize("Composite Blur Tap Size", Float) = 0
+        [KeywordEnum(NARROW,MEDIUM,WIDE)] TapSize("Composite Blur Tap Size", Float) = 0
         [Toggle(USE_CURVATURE)] _UseCurvature("Use Curvature", Float) = 0
         [Toggle(USE_CORNER_MASK)] _UseCornerMask("Use Corner Mask", Float) = 1
         [KeywordEnum(NONE,CW,CCW)] Turn("Turn Mode", Float) = 0
@@ -61,7 +61,7 @@ Shader "Hidden/NTSCPass"
             float _ChromaPhaseShiftScale;
             float _FrameCountNum;
 
-            v2f vert (appdata v)
+            v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = DEF_VERTEX_POS(v);
@@ -73,60 +73,54 @@ Shader "Hidden/NTSCPass"
             #define PI (3.14159265)
 
             #if CROSSTALK_VERTICAL
-            #define HSCAN_RATE  (1.0)
-            #define HSCAN_SHIFT (2.0)
+            static const float CHROMA_MOD_FREQ = (PI / 3.0) * _ChromaModFrequencyScale;
+            static const float CHROMA_PHASE_SHIFT = (2.0 * PI) * _ChromaPhaseShiftScale;
             #elif CROSSTALK_SLANT || CROSSTALK_SLANT_NOISE
-            #define HSCAN_RATE  (0.75)
-            #define HSCAN_SHIFT (86.0)
+            static const float CHROMA_MOD_FREQ = (0.75 * PI / 3.0) * _ChromaModFrequencyScale;
+            static const float CHROMA_PHASE_SHIFT = (86.0 * PI) * _ChromaPhaseShiftScale;
             #else
-            #define HSCAN_RATE (0)
-            #define HSCAN_SHIFT (0)
+            static const float CHROMA_MOD_FREQ = 0;
+            static const float CHROMA_PHASE_SHIFT = 0;
             #endif
-
-            static const float ChromaModFreq = (HSCAN_RATE * PI / 3.0) * _ChromaModFrequencyScale;
-            static const float ChromaPhaseShift = (HSCAN_SHIFT * PI) * _ChromaPhaseShiftScale;
-
-            static const float crossTalkStrength = max(0.1, _CrossTalkStrength);
-            static const float3x3 mix_mat = float3x3(
-                _Brightness, _ArtifactStrength, _ArtifactStrength,
-                _FringeStrength, crossTalkStrength, 0.0,
-                _FringeStrength, 0.0, crossTalkStrength 
-            );
-
-            static const float3x3 yiq_mat = float3x3(
+            static const float CROSSTALK_STRENGTH = max(0.1, _CrossTalkStrength);
+            static const float FRINGE_STRENGTH = _FringeStrength * 0.7;
+            static const float3x3 YIQ_MAT = float3x3(
                 0.299, 0.587, 0.114,
                 0.596, -0.274, -0.322,
                 0.211, -0.523, 0.312
             );
-
             inline float3 RGBToYIQ(float3 col)
             {
-                return mul(yiq_mat, col);
+                return mul(YIQ_MAT, col);
             }
 
-            DEF_OUT_FRAGMENT frag (v2f i) : SV_Target
+            DEF_OUT_FRAGMENT frag(v2f i) : SV_Target
             {
                 const float3 col = DEF_SAMPLE_TEXTURE2D(_MainTex, i.tex_coord).rgb;
                 float3 yiq = RGBToYIQ(col);
-
+                
                 #if CROSSTALK_VERTICAL
-                const float chroma_phase = ChromaPhaseShift;
+                const float chroma_phase = CHROMA_PHASE_SHIFT;
                 #elif CROSSTALK_SLANT
-                const float chroma_phase = ChromaPhaseShift * (fmod(i.pixel.y, 3.0) + 1) / 3.0;
+                const float chroma_phase = CHROMA_PHASE_SHIFT * (fmod(i.pixel.y, 3.0) + 1) / 3.0;
                 #elif CROSSTALK_SLANT_NOISE
                 const uint fc = (_FrameCountNum / 2);
-                const float chroma_phase = ChromaPhaseShift * (fmod(i.pixel.y, 3.0) + 1 + (fc % 2)) / 3.0;
+                const float chroma_phase = CHROMA_PHASE_SHIFT * (fmod(i.pixel.y, 3.0) + 1 + (fc % 2)) / 3.0;
                 #endif
                 #if CROSSTALK_VERTICAL || CROSSTALK_SLANT || CROSSTALK_SLANT_NOISE
-                const float mod_phase = chroma_phase + i.pixel.x * ChromaModFreq;
+                const float mod_phase = chroma_phase + i.pixel.x * CHROMA_MOD_FREQ;
 
                 float i_mod, q_mod;
                 sincos(mod_phase, i_mod, q_mod);
 
                 // Cross-Talk
-                yiq.yz *= float2(i_mod, q_mod) / crossTalkStrength;
-                yiq = mul(mix_mat, yiq); // Cross-Talk
-                yiq.yz *= float2(i_mod, q_mod) * crossTalkStrength;
+                yiq.yz *= float2(i_mod, q_mod) / CROSSTALK_STRENGTH;
+                yiq = float3(
+                    yiq.x * _Brightness + yiq.y * _ArtifactStrength + yiq.z * _ArtifactStrength,
+                    yiq.x * FRINGE_STRENGTH + yiq.y * CROSSTALK_STRENGTH,
+                    yiq.x * FRINGE_STRENGTH + yiq.z * CROSSTALK_STRENGTH
+                );
+                yiq.yz *= float2(i_mod, q_mod) * CROSSTALK_STRENGTH;
                 #endif
                 
                 return float4(yiq * 0.5 + 0.5, 1.0);
@@ -140,10 +134,11 @@ Shader "Hidden/NTSCPass"
             #pragma vertex vert
             #pragma fragment frag
 
-            #pragma multi_compile_local TAPSIZE_TAP4 TAPSIZE_TAP8 TAPSIZE_TAP24
+            #pragma multi_compile_local TAPSIZE_NARROW TAPSIZE_MEDIUM TAPSIZE_WIDE
             #pragma multi_compile_local _ _UNITY_RENDER_PIPELINE_HDRP
 
             #include "MultiPipeline.hlsl"
+            #include "HLSLSupport.cginc"
 
             struct v2f
             {
@@ -157,121 +152,104 @@ Shader "Hidden/NTSCPass"
             float2 _OutputSize;
             float _BlackLevel;
 
-            v2f vert (appdata v)
+            #define PI (3.14159265)
+
+            v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = DEF_VERTEX_POS(v);
                 o.tex_coord = DEF_UV(v) - float2(0.5 / _TextureSize.x, 0.0);
                 return o;
             }
-
-            #if TAPSIZE_TAP24
-                #define TAPS 24
-                static const float luma_filter[TAPS + 1] = {
-                -0.00001202,
-                -0.00002215,
-                -0.00001316,
-                -0.00001202,
-                -0.00004998,
-                -0.00011394,
-                -0.00012215,
-                -0.00000561,
-                0.00017052,
-                0.00023720,
-                0.00016964,
-                0.00028569,
-                0.00098457,
-                0.00201868,
-                0.00200228,
-                -0.00090988,
-                -0.00704908,
-                -0.01322286,
-                -0.01260693,
-                0.00246086,
-                0.03586823,
-                0.08401645,
-                0.13556350,
-                0.17526127,
-                0.19017655};
-
-                static float chroma_filter[TAPS + 1] = {
-                -0.00011885,
-                -0.00027131,
-                -0.00050264,
-                -0.00093083,
-                -0.00145101,
-                -0.00206474,
-                -0.00270043,
-                -0.00324128,
-                -0.00352495,
-                -0.00335028,
-                -0.00249173,
-                -0.00072115,
-                0.00216466,
-                0.00631364,
-                0.01178910,
-                0.01854566,
-                0.02641440,
-                0.03510071,
-                0.04419657,
-                0.05320720,
-                0.06159028,
-                0.06880360,
-                0.07435619,
-                0.07785656,
-                0.07905240};
-            #elif TAPSIZE_TAP8
-                #define TAPS 8
-                static const float luma_filter[9] = {
-                    0.0019, 0.0052, 0.0035, -0.0163, -0.0407,
-                    -0.0118, 0.1111, 0.2729, 0.3489
+            
+            #if TAPSIZE_WIDE
+                // LUMA Filter: Taps=11, Cutoff=0.12
+                static const float LUMA_CENTER_W = 0.22613725;
+                static const int LUMA_PAIRS = 3;
+                static const float2 LUMA_DATA[] = {
+                    float2(1.40446515, 0.33685664),
+                    float2(3.09226098, 0.06834473),
+                    float2(5.00000000, -0.01827000),
                 };
-
-                static const float chroma_filter[9] = {
-                    0.0025, 0.0057, 0.0147, 0.0315, 0.0555,
-                    0.0834, 0.1099, 0.1289, 0.1358
+                // CHROMA Filter: Taps=17, Cutoff=0.01
+                static const float CHROMA_CENTER_W = 0.11365996;
+                static const int CHROMA_PAIRS = 4;
+                static const float2 CHROMA_DATA[] = {
+                    float2(1.47332442, 0.20834934),
+                    float2(3.43377501, 0.14509308),
+                    float2(5.38053278, 0.07057921),
+                    float2(7.27566777, 0.01914838),
                 };
-            #else //TAPSIZE_TAP4
-                #define TAPS 4
-                static const float luma_filter[5] = {
-                    0.0071, -0.0128, -0.0525,
-                    0.384, 0.3489
+            #elif TAPSIZE_MEDIUM
+                // LUMA Filter: Taps=7, Cutoff=0.2
+                static const float LUMA_CENTER_W = 0.38141133;
+                static const int LUMA_PAIRS = 2;
+                static const float2 LUMA_DATA[] = {
+                    float2(1.20499519, 0.34277527),
+                    float2(3.00000000, -0.03348094),
                 };
-
-                static const float chroma_filter[5] = {
-                    0.0082, 0.0462, 0.1389,
-                    0.2388, 0.1358
+                // CHROMA Filter: Taps=13, Cutoff=0.01
+                static const float CHROMA_CENTER_W = 0.14815713;
+                static const int CHROMA_PAIRS = 3;
+                static const float2 CHROMA_DATA[] = {
+                    float2(1.45430160, 0.25574073),
+                    float2(3.38106716, 0.13630954),
+                    float2(5.24743691, 0.03387117),
+                };
+            #else
+                // LUMA Filter: Taps=5, Cutoff=0.36
+                static const float LUMA_CENTER_W = 0.74498622;
+                static const int LUMA_PAIRS = 1;
+                static const float2 LUMA_DATA[] = {
+                    float2(1.00000000, 0.12750689),
+                };
+                // CHROMA Filter: Taps=9, Cutoff=0.01
+                static const float CHROMA_CENTER_W = 0.21339512;
+                static const int CHROMA_PAIRS = 2;
+                static const float2 CHROMA_DATA[] = {
+                    float2(1.40312392, 0.31558230),
+                    float2(3.21252814, 0.07772014),
                 };
             #endif
 
-            static const float3x3 YIQToRGB_mat = float3x3(
+            static const float3x3 RGB_MAT = float3x3(
                 1.0, 0.956, 0.621,
                 1.0, -0.272, -0.647,
                 1.0, -1.106, 1.703);
-
             inline float3 YIQToRGB(float3 yiq)
             {
-                return mul(YIQToRGB_mat, yiq);
+                return mul(RGB_MAT, yiq);
             }
+            
+            static const float BLACK_LEVEL = 0.95 * _BlackLevel;
 
-            inline float3 fetch_offset(float2 uv, float offset, float x)
+            DEF_OUT_FRAGMENT frag(v2f i) : SV_Target
             {
-                return DEF_SAMPLE_TEXTURE2D(_MainTex, uv + float2(offset * x, 0.0)).xyz;
-            }
-
-            DEF_OUT_FRAGMENT frag (v2f i) : SV_Target
-            {
-                const float one_div_x = 1.0 / _TextureSize.x;
-                float3 signal = float3(0.0, 0.0, 0.0);
-                for (int j = 0; j < TAPS; j++)
+                const float pixelU = 1.0 / _TextureSize.x;
+                i.tex_coord.x += pixelU * 0.5;
+                float3 center = DEF_SAMPLE_TEXTURE2D(_MainTex, i.tex_coord).xyz;
+                float ySums = center.x * LUMA_CENTER_W;
+                float2 iqSums = center.yz * CHROMA_CENTER_W;
+                int j;
+                UNITY_UNROLL
+                for (j = 0; j < LUMA_PAIRS; j++)
                 {
-                    const float3 sums = fetch_offset(i.tex_coord, float(j) - float(TAPS), one_div_x) +
-                        fetch_offset(i.tex_coord, float(TAPS) - float(j), one_div_x);
-                    signal += sums * float3(luma_filter[j]*0.95*_BlackLevel, chroma_filter[j], chroma_filter[j]);
+                    const float2 offset = float2(LUMA_DATA[j].x * pixelU, pixelU * 0.0);
+                    const float weight = LUMA_DATA[j].y;
+                    const float valL = DEF_SAMPLE_TEXTURE2D(_MainTex, i.tex_coord - offset).x;
+                    const float valR = DEF_SAMPLE_TEXTURE2D(_MainTex, i.tex_coord + offset).x;
+                    ySums += (valL + valR) * weight * BLACK_LEVEL;
                 }
-                signal += DEF_SAMPLE_TEXTURE2D(_MainTex, i.tex_coord).xyz *
-                    float3(luma_filter[TAPS], chroma_filter[TAPS], chroma_filter[TAPS]);
-                return float4(YIQToRGB(signal * 2.0 - 1.0), 1.0);
+                UNITY_UNROLL
+                for (j = 0; j < CHROMA_PAIRS; j++)
+                {
+                    const float2 offset = float2(CHROMA_DATA[j].x * pixelU, pixelU * 0.0);
+                    const float weight = CHROMA_DATA[j].y;
+                    const float2 valL = DEF_SAMPLE_TEXTURE2D(_MainTex, i.tex_coord - offset).yz;
+                    const float2 valR = DEF_SAMPLE_TEXTURE2D(_MainTex, i.tex_coord + offset).yz;
+                    iqSums += (valL + valR) * weight;
+                }
+                return float4(YIQToRGB(float3(ySums, iqSums) * 2.0 - 1.0), 1.0);
             }
             ENDHLSL
         }
@@ -336,7 +314,7 @@ Shader "Hidden/NTSCPass"
                 }
             #endif
 
-            v2f vert (appdata v)
+            v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = DEF_VERTEX_POS(v);
@@ -356,24 +334,20 @@ Shader "Hidden/NTSCPass"
             #define NTSC_CRT_GAMMA (2.5)
             #define NTSC_DISPLAY_GAMMA (2.1)
             #define PI (3.14159265)
-            const static float HeightScale = (_OutputSize.y / _TextureSize.y) * PI;
+            const static float HEIGHT_SCALE = (_OutputSize.y / _TextureSize.y) * PI;
 
-            inline float4 NTSCGauss(float2 uv, float2 pixel)
+            inline float4 Scanline(float2 uv, float2 pixel)
             {
-                const float3 frame = pow(DEF_SAMPLE_TEXTURE2D(_MainTex, uv).rgb, float3(NTSC_CRT_GAMMA, NTSC_CRT_GAMMA, NTSC_CRT_GAMMA));
+                const float3 frame = pow(DEF_SAMPLE_TEXTURE2D(_MainTex, uv).rgb, NTSC_CRT_GAMMA.xxx);
                 const float lum = 1 - saturate(dot(frame, float3(0.299f, 0.587f, 0.114f)));
-                const float scanlineLum = sin(pixel.y * HeightScale) + 1;
+                const float scanlineLum = sin(pixel.y * HEIGHT_SCALE) + 1;
                 const float scanlineStr = _ScanlineStrength * lerp(1-_BeamSpread, 1, lum * lum * scanlineLum);
                 const float3 scanline = frame * lerp(1, scanlineLum, scanlineStr);
-
-                const float3 gamma_mod = float3(1.0 / NTSC_DISPLAY_GAMMA, 1.0 / NTSC_DISPLAY_GAMMA, 1.0 / NTSC_DISPLAY_GAMMA);
-
-                const float p = _BeamStrength;
-                return float4(pow(float3(p, p, p) * scanline, gamma_mod), 1.0);
+                return float4(pow(_BeamStrength * scanline, 1.0 / NTSC_DISPLAY_GAMMA), 1.0);
             }
 
             #if USE_CORNER_MASK
-                inline float rectangle(float2 samplePosition, float2 halfSize){
+                inline float Rectangle(float2 samplePosition, float2 halfSize){
                     const float2 componentWiseEdgeDistance = abs(samplePosition) - halfSize;
                     const float outsideDistance = length(max(componentWiseEdgeDistance, 0));
                     const float insideDistance = min(max(componentWiseEdgeDistance.x, componentWiseEdgeDistance.y), 0);
@@ -381,7 +355,7 @@ Shader "Hidden/NTSCPass"
                 }
             #endif
 
-            DEF_OUT_FRAGMENT frag (v2f i) : SV_Target
+            DEF_OUT_FRAGMENT frag(v2f i) : SV_Target
             {
                 #if USE_CURVATURE
                     const float2 uv = Warp(i.tex_coord.xy);
@@ -395,13 +369,13 @@ Shader "Hidden/NTSCPass"
                     #else
                         //frame mask
                         const float2 size = _TextureSize * 0.5 - _MaskRadius;
-                        const float mask = step(-_MaskRadius, 1.0 - rectangle(i.pixel - _TextureSize * 0.5, size));
+                        const float mask = step(-_MaskRadius, 1.0 - Rectangle(i.pixel - _TextureSize * 0.5, size));
                     #endif
                 #else
                     const float mask = 1;
                 #endif
 
-                return NTSCGauss(uv, i.pixel) * mask;
+                return Scanline(uv, i.pixel) * mask;
             }
             ENDHLSL
         }
@@ -425,7 +399,7 @@ Shader "Hidden/NTSCPass"
 
             DEF_SAMPLER2D(_MainTex);
 
-            v2f vert (appdata v)
+            v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = DEF_VERTEX_POS(v);
@@ -448,7 +422,7 @@ Shader "Hidden/NTSCPass"
                 return o;
             }
 
-            DEF_OUT_FRAGMENT frag (v2f i) : SV_Target
+            DEF_OUT_FRAGMENT frag(v2f i) : SV_Target
             {
                 return DEF_SAMPLE_TEXTURE2D(_MainTex, i.tex_coord);
             }

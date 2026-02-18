@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 #if UNITY_PIPELINE_URP
 using UnityEngine.Rendering;
 
@@ -25,10 +26,10 @@ namespace CRTPostprocess
         public FloatParameter chromaModFrequencyScale = new FloatParameter(1f);
         public FloatParameter chromaPhaseShiftScale = new FloatParameter(1f);
         #if UNITY_2023_2_OR_NEWER
-        public EnumParameter<NTSCPass.GaussianBlurWidth> gaussianBlurWidth = new EnumParameter<NTSCPass.GaussianBlurWidth>(NTSCPass.GaussianBlurWidth.TAP8);
+        [FormerlySerializedAs("gaussianBlurWidth")] public EnumParameter<NTSCPass.BlurWidth> blurWidth = new EnumParameter<NTSCPass.BlurWidth>(NTSCPass.BlurWidth.Medium);
         #else
-        [Tooltip("0=TAP4, 1=TAP8, 2=TAP24")]
-        public ClampedIntParameter gaussianBlurWidth = new ClampedIntParameter((int)NTSCPass.GaussianBlurWidth.TAP8, 0, 2);
+        [Tooltip("0=Narrow, 1=Medium, 2=Wide")]
+        [FormerlySerializedAs("gaussianBlurWidth")] public ClampedIntParameter blurWidth = new ClampedIntParameter((int)NTSCPass.BlurWidth.Medium, 0, 2);
         #endif
         public BoolParameter curvature = new BoolParameter(true);
         public BoolParameter cornerMask = new BoolParameter(true);

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 #if UNITY_PIPELINE_HDRP
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
@@ -18,11 +19,11 @@ namespace CRTPostprocess
             SlantNoise
         }
 
-        public enum GaussianBlurWidth
+        public enum BlurWidth
         {
-            TAP4,
-            TAP8,
-            TAP24
+            Narrow,
+            Medium,
+            Wide
         }
 
         public enum DisplayOrientation
@@ -49,10 +50,10 @@ namespace CRTPostprocess
         public FloatParameter chromaModFrequencyScale = new FloatParameter(1f);
         public FloatParameter chromaPhaseShiftScale = new FloatParameter(1f);
         #if UNITY_2023_2_OR_NEWER
-        public EnumParameter<GaussianBlurWidth> gaussianBlurWidth = new EnumParameter<GaussianBlurWidth>(GaussianBlurWidth.TAP8);
+        [FormerlySerializedAs("gaussianBlurWidth")] public EnumParameter<BlurWidth> blurWidth = new EnumParameter<BlurWidth>(BlurWidth.Medium);
         #else
-        [Tooltip("0=TAP4, 1=TAP8, 2=TAP24")]
-        public ClampedIntParameter gaussianBlurWidth = new ClampedIntParameter((int)GaussianBlurWidth.TAP8, 0, 2);
+        [Tooltip("0=Narrow, 1=Medium, 2=Wide")]
+        [FormerlySerializedAs("gaussianBlurWidth")] public ClampedIntParameter blurWidth = new ClampedIntParameter((int)BlurWidth.Medium, 0, 2);
         #endif
         public BoolParameter curvature = new BoolParameter(true);
         public BoolParameter cornerMask = new BoolParameter(true);
@@ -97,9 +98,9 @@ namespace CRTPostprocess
         private static LocalKeyword _turnNone;
         private static LocalKeyword _turnCW;
         private static LocalKeyword _turnCCW;
-        private static LocalKeyword _keyTap4;
-        private static LocalKeyword _keyTap8;
-        private static LocalKeyword _keyTap24;
+        private static LocalKeyword _keyNarrow;
+        private static LocalKeyword _keyMedium;
+        private static LocalKeyword _keyWide;
         private static LocalKeyword _keyCrossVertical;
         private static LocalKeyword _keyCrossSlant;
         private static LocalKeyword _keyCrossSlantNoise;
@@ -120,9 +121,9 @@ namespace CRTPostprocess
             _turnNone = new LocalKeyword(shader, "TURN_NONE");
             _turnCW = new LocalKeyword(shader, "TURN_CW");
             _turnCCW = new LocalKeyword(shader, "TURN_CCW");
-            _keyTap4 = new LocalKeyword(shader, "TAPSIZE_TAP4");
-            _keyTap8 = new LocalKeyword(shader, "TAPSIZE_TAP8");
-            _keyTap24 = new LocalKeyword(shader, "TAPSIZE_TAP24");
+            _keyNarrow = new LocalKeyword(shader, "TAPSIZE_NARROW");
+            _keyMedium = new LocalKeyword(shader, "TAPSIZE_MEDIUM");
+            _keyWide = new LocalKeyword(shader, "TAPSIZE_WIDE");
             _keyCrossVertical = new LocalKeyword(shader, "CROSSTALK_VERTICAL");
             _keyCrossSlant = new LocalKeyword(shader, "CROSSTALK_SLANT");
             _keyCrossSlantNoise = new LocalKeyword(shader, "CROSSTALK_SLANT_NOISE");
@@ -244,32 +245,32 @@ namespace CRTPostprocess
             _material.SetVector(_propInputSize, new Vector4(w, bufferHeight.value, 0, 0));
             _material.SetVector(_propOutputSize, new Vector4(1137, outputHeight.value, 0, 0));
 
-            // Gaussian Blur Width
-            _material.SetKeyword(_keyTap4, false);
-            _material.SetKeyword(_keyTap8, false);
-            _material.SetKeyword(_keyTap24, false);
-            switch (gaussianBlurWidth.value)
+            // Blur Width
+            _material.SetKeyword(_keyNarrow, false);
+            _material.SetKeyword(_keyMedium, false);
+            _material.SetKeyword(_keyWide, false);
+            switch (blurWidth.value)
             {
                 #if UNITY_2023_2_OR_NEWER
-                case GaussianBlurWidth.TAP4:
+                case BlurWidth.Narrow:
                 #else
-                case (int)GaussianBlurWidth.TAP4:
+                case (int)BlurWidth.Narrow:
                 #endif
-                    _material.SetKeyword(_keyTap4, true);
+                    _material.SetKeyword(_keyNarrow, true);
                     break;
                 #if UNITY_2023_2_OR_NEWER
-                case GaussianBlurWidth.TAP8:
+                case BlurWidth.Medium:
                 #else
-                case (int)GaussianBlurWidth.TAP8:
+                case (int)BlurWidth.Medium:
                 #endif
-                    _material.SetKeyword(_keyTap8, true);
+                    _material.SetKeyword(_keyMedium, true);
                     break;
                 #if UNITY_2023_2_OR_NEWER
-                case GaussianBlurWidth.TAP24:
+                case BlurWidth.Wide:
                 #else
-                case (int)GaussianBlurWidth.TAP24:
+                case (int)BlurWidth.Wide:
                 #endif
-                    _material.SetKeyword(_keyTap24, true);
+                    _material.SetKeyword(_keyWide, true);
                     break;
             }
             

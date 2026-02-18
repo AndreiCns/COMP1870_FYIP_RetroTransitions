@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 
 namespace CRTPostprocess
 {
@@ -15,11 +16,11 @@ namespace CRTPostprocess
             SlantNoise
         }
 
-        public enum GaussianBlurWidth
+        public enum BlurWidth
         {
-            TAP4,
-            TAP8,
-            TAP24
+            Narrow,
+            Medium,
+            Wide
         }
 
         public enum DisplayOrientation
@@ -39,7 +40,7 @@ namespace CRTPostprocess
         public float fringeStrength = 0.75f;
         public float chromaModFrequencyScale = 1f;
         public float chromaPhaseShiftScale = 1f;
-        public GaussianBlurWidth gaussianBlurWidth = GaussianBlurWidth.TAP8;
+        [FormerlySerializedAs("gaussianBlurWidth")] public BlurWidth blurWidth = BlurWidth.Medium;
         public bool curvature = true;
         public bool cornerMask = true;
         [Tooltip("Non curvature mode uses this parameter.")] public int cornerRadius = 16;
@@ -70,7 +71,7 @@ namespace CRTPostprocess
         private static readonly int _propFringeStrength = Shader.PropertyToID("_FringeStrength");
         private static readonly int _propChromaModFrequencyScale = Shader.PropertyToID("_ChromaModFrequencyScale");
         private static readonly int _propChromaPhaseShiftScale = Shader.PropertyToID("_ChromaPhaseShiftScale");
-        private static readonly int _propFrameCount = Shader.PropertyToID("_FrameCount");
+        private static readonly int _propFrameCount = Shader.PropertyToID("_FrameCountNum");
 
         private static readonly int _renderTex1Id = Shader.PropertyToID("_NTSCTex1");
         private static readonly int _renderTex2Id = Shader.PropertyToID("_NTSCTex2");
@@ -78,9 +79,9 @@ namespace CRTPostprocess
         private static LocalKeyword _turnNone;
         private static LocalKeyword _turnCW;
         private static LocalKeyword _turnCCW;
-        private static LocalKeyword _keyTap4;
-        private static LocalKeyword _keyTap8;
-        private static LocalKeyword _keyTap24;
+        private static LocalKeyword _keyNarrow;
+        private static LocalKeyword _keyMedium;
+        private static LocalKeyword _keyWide;
         private static LocalKeyword _keyCrossVertical;
         private static LocalKeyword _keyCrossSlant;
         private static LocalKeyword _keyCrossSlantNoise;
@@ -96,9 +97,9 @@ namespace CRTPostprocess
             _turnNone = new LocalKeyword(shader, "TURN_NONE");
             _turnCW = new LocalKeyword(shader, "TURN_CW");
             _turnCCW = new LocalKeyword(shader, "TURN_CCW");
-            _keyTap4 = new LocalKeyword(shader, "TAPSIZE_TAP4");
-            _keyTap8 = new LocalKeyword(shader, "TAPSIZE_TAP8");
-            _keyTap24 = new LocalKeyword(shader, "TAPSIZE_TAP24");
+            _keyNarrow = new LocalKeyword(shader, "TAPSIZE_NARROW");
+            _keyMedium = new LocalKeyword(shader, "TAPSIZE_MEDIUM");
+            _keyWide = new LocalKeyword(shader, "TAPSIZE_WIDE");
             _keyCrossVertical = new LocalKeyword(shader, "CROSSTALK_VERTICAL");
             _keyCrossSlant = new LocalKeyword(shader, "CROSSTALK_SLANT");
             _keyCrossSlantNoise = new LocalKeyword(shader, "CROSSTALK_SLANT_NOISE");
@@ -215,20 +216,20 @@ namespace CRTPostprocess
             _material.SetVector(_propInputSize, new Vector4(w, bufferHeight, 0, 0));
             _material.SetVector(_propOutputSize, new Vector4(1137, outputHeight, 0, 0));
 
-            // Gaussian Blur Width
-            _material.SetKeyword(_keyTap4, false);
-            _material.SetKeyword(_keyTap8, false);
-            _material.SetKeyword(_keyTap24, false);
-            switch (gaussianBlurWidth)
+            // Blur Width
+            _material.SetKeyword(_keyNarrow, false);
+            _material.SetKeyword(_keyMedium, false);
+            _material.SetKeyword(_keyWide, false);
+            switch (blurWidth)
             {
-                case GaussianBlurWidth.TAP4:
-                    _material.SetKeyword(_keyTap4, true);
+                case BlurWidth.Narrow:
+                    _material.SetKeyword(_keyNarrow, true);
                     break;
-                case GaussianBlurWidth.TAP8:
-                    _material.SetKeyword(_keyTap8, true);
+                case BlurWidth.Medium:
+                    _material.SetKeyword(_keyMedium, true);
                     break;
-                case GaussianBlurWidth.TAP24:
-                    _material.SetKeyword(_keyTap24, true);
+                case BlurWidth.Wide:
+                    _material.SetKeyword(_keyWide, true);
                     break;
             }
             

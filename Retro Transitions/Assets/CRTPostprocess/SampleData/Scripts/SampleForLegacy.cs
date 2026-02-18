@@ -20,7 +20,7 @@ namespace CRTPostprocess.Sample
 
         private bool _featureActive;
         private NTSCPostprocess.CrossTalkMode _crossTalkModeDefault;
-        private NTSCPostprocess.GaussianBlurWidth _gaussianBlurWidthDefault;
+        private NTSCPostprocess.BlurWidth _blurWidthDefault;
         private bool _curvatureDefault;
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -31,7 +31,7 @@ namespace CRTPostprocess.Sample
             if (postProcess != null)
             {
                 _crossTalkModeDefault = postProcess.crossTalkMode;
-                _gaussianBlurWidthDefault = postProcess.gaussianBlurWidth;
+                _blurWidthDefault = postProcess.blurWidth;
                 _curvatureDefault = postProcess.curvature;
                 _featureActive = postProcess.enabled;
             }
@@ -44,7 +44,7 @@ namespace CRTPostprocess.Sample
             if (postProcess != null)
             {
                 postProcess.crossTalkMode = _crossTalkModeDefault;
-                postProcess.gaussianBlurWidth = _gaussianBlurWidthDefault;
+                postProcess.blurWidth = _blurWidthDefault;
                 postProcess.curvature = _curvatureDefault;
                 postProcess.enabled = _featureActive;
                 postProcess.UpdateParameters();
@@ -62,7 +62,7 @@ namespace CRTPostprocess.Sample
                 // Update Text for Info
                 string t = "Cross-Talk: " + (NTSCPostprocess.CrossTalkMode)(_currentCrossTalkMode + 1);
                 t += ", Curvature: " + (_currentCurvature ? "ON" : "OFF");
-                t += ", GaussWidth: " + (NTSCPostprocess.GaussianBlurWidth)_currentGaussianBlurWidthMode;
+                t += ", GaussWidth: " + (NTSCPostprocess.BlurWidth)_currentGaussianBlurWidthMode;
                 textForInfo.text = t;
             }
         }
@@ -100,7 +100,7 @@ namespace CRTPostprocess.Sample
                 {
                     if (postProcess != null) postProcess.enabled = true;
                     SetNTSC(_currentCurvature, (NTSCPostprocess.CrossTalkMode)(_currentCrossTalkMode + 1),
-                        (NTSCPostprocess.GaussianBlurWidth)_currentGaussianBlurWidthMode);
+                        (NTSCPostprocess.BlurWidth)_currentGaussianBlurWidthMode);
                 }
 
                 UpdateTextForInfo();
@@ -117,11 +117,11 @@ namespace CRTPostprocess.Sample
             sampleData[_index].SetActive(true);
         }
 
-        void SetNTSC(bool _curvature, NTSCPostprocess.CrossTalkMode _crossTalkMode, NTSCPostprocess.GaussianBlurWidth _gaussianBlurWidth)
+        void SetNTSC(bool _curvature, NTSCPostprocess.CrossTalkMode _crossTalkMode, NTSCPostprocess.BlurWidth blurWidth)
         {
             if (postProcess == null) return;
             postProcess.crossTalkMode = _crossTalkMode;
-            postProcess.gaussianBlurWidth = _gaussianBlurWidth;
+            postProcess.blurWidth = blurWidth;
             postProcess.curvature = _curvature;
             postProcess.UpdateParameters();
         }

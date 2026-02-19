@@ -28,8 +28,10 @@ public class PlayerShootModule : MonoBehaviour
 
     private void Awake()
     {
+        // Use root as damage source (not just the weapon child)
         owner = transform.root.gameObject;
 
+        // Quick sanity checks
         if (playerCamera == null && logWarnings)
             Debug.LogWarning($"{name}: playerCamera not assigned", this);
         if (muzzle == null && logWarnings)
@@ -38,25 +40,16 @@ public class PlayerShootModule : MonoBehaviour
             Debug.LogWarning($"{name}: gunshotSource not assigned", this);
     }
 
-    // --- NEW: runtime config hooks ---
-    public void SetDamage(float newDamage)
-    {
-        damage = Mathf.Max(0f, newDamage);
-    }
-
-    public void SetMuzzleFlash(MuzzleFlashController newFlash)
-    {
-        if (newFlash == null) return;
-        muzzleFlash = newFlash;
-    }
-
+    // Called from input before triggering the fire animation
     public bool TryBeginFire()
     {
         if (!canFire) return false;
+
         canFire = false;
         return true;
     }
 
+    // Called by animation event at the firing frame
     public void FireProjectile()
     {
         if (playerCamera == null) return;
@@ -72,6 +65,7 @@ public class PlayerShootModule : MonoBehaviour
         Vector3 origin = playerCamera.transform.position;
         Vector3 direction = playerCamera.transform.forward;
 
+        // Simple hitscan from camera
         if (Physics.Raycast(origin, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
         {
             if (drawDebugRay)
@@ -93,11 +87,13 @@ public class PlayerShootModule : MonoBehaviour
         }
     }
 
+    // Called at the end of the shoot animation
     public void OnShootAnimFinished()
     {
         canFire = true;
     }
 
+    // Reset if weapon gets disabled mid-shot
     private void OnDisable()
     {
         canFire = true;

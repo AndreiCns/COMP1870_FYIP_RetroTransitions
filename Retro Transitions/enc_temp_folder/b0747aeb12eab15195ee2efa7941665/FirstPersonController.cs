@@ -7,10 +7,21 @@ public class FirstPersonController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform playerCamera;
-    [SerializeField] private Transform weaponHolder; 
+    [SerializeField] private Transform weaponHolder;
+    [SerializeField] private WeaponStyleSwap weaponStyleSwap;
     [SerializeField] private Camera cam;
     [SerializeField] private Transform weaponRecoil;
-    [SerializeField] private PlayerCombatController combat;
+    [SerializeField] private Animator weaponAnimator;
+    [SerializeField] private PlayerShootModule modernShoot;
+    [SerializeField] private PlayerShootModule retroShoot;
+
+    // Uses whichever shoot module is currently active
+    private PlayerShootModule ActiveShoot =>
+        (modernShoot != null && modernShoot.gameObject.activeInHierarchy) ? modernShoot :
+        (retroShoot != null && retroShoot.gameObject.activeInHierarchy) ? retroShoot :
+        null;
+
+    private readonly string shootTrigger = "Fire";
 
     [Header("Movement SFX")]
     [SerializeField] private AudioSource movementSfxSource;
@@ -47,10 +58,14 @@ public class FirstPersonController : MonoBehaviour
     [Header("FOV Kick")]
     [SerializeField] private float fovKickAmount = 8f;
     [SerializeField] private float fovKickTime = 0.15f;
+    private Coroutine fovKickRoutine;
+    private float defaultFOV;
 
     [Header("Weapon Bob")]
     [SerializeField] private float bobSpeed = 10f;
     [SerializeField] private float bobAmount = 0.03f;
+    private float bobTimer;
+    private Vector3 weaponHolderInitialLocalPos;
 
     [Header("Weapon Recoil")]
     [SerializeField] private float recoilKickback = 0.15f;
@@ -62,21 +77,15 @@ public class FirstPersonController : MonoBehaviour
     private Vector3 recoilCurrentRot;
     private Vector3 recoilTargetRot;
 
-    private float bobTimer;
-    private float defaultFOV;
-    private Coroutine fovKickRoutine;
-   
-    private Vector3 weaponHolderInitialLocalPos;
-    
     private CharacterController controller;
     private Vector2 moveInput;
     private Vector2 lookInput;
     private float pitch;
     private Vector3 velocity;
     private int jumpCount;
+
     private float stepTimer;
     private bool wasGrounded;
-
 
     private void Awake()
     {
@@ -95,10 +104,6 @@ public class FirstPersonController : MonoBehaviour
 
         if (movementLowPass == null)
             movementLowPass = movementSfxSource.gameObject.AddComponent<AudioLowPassFilter>();
-
-        if (combat == null)
-            combat = GetComponent<PlayerCombatController>();
-
     }
 
     private void OnEnable()
@@ -153,14 +158,18 @@ public class FirstPersonController : MonoBehaviour
     {
         if (!ctx.performed) return;
 
-        if (combat != null)
-            combat.TryFire();
+        // Shoot module gates the fire timing
+        var shoot = ActiveShoot;
+        if (shoot != null && !shoot.TryBeginFire())
+            return;
 
-        // Recoil is local feel, keep it here.
+        weaponAnimator.SetTrigger(shootTrigger);
+        weaponStyleSwap?.Fire();
+
+        // Recoil is smoothed in LateUpdate
         recoilTargetPos -= new Vector3(0, 0, recoilKickback);
         recoilTargetRot += new Vector3(-recoilUp, 0, 0);
     }
-
 
     private void Update()
     {

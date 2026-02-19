@@ -14,31 +14,14 @@ public class StyleSwapManager : MonoBehaviour
     [SerializeField] private bool verboseLogs = true;
 
     private StyleState currentState = StyleState.Modern;
-    public StyleState CurrentState => currentState;
-
-    private GameAudioManager gameAudio;
-
-    private void Awake()
-    {
-        // Required for the system to function.
-        if (styleSwapEvent == null)
-        {
-            Debug.LogError("[StyleSwapManager] styleSwapEvent is NULL.", this);
-            enabled = false;
-            return;
-        }
-
-        // Cache once; this is the central style brain.
-        gameAudio = FindFirstObjectByType<GameAudioManager>();
-    }
 
     private void OnEnable()
     {
-        // Optional hotkey for fast iteration.
+        // Optional hotkey for quick testing
         if (toggleStyleAction != null)
             toggleStyleAction.action.performed += OnTogglePressed;
 
-        // Delay one frame so listeners have subscribed.
+        // Raise initial style after one frame so listeners are ready
         StartCoroutine(RaiseInitialStyleNextFrame());
     }
 
@@ -50,7 +33,7 @@ public class StyleSwapManager : MonoBehaviour
 
     private IEnumerator RaiseInitialStyleNextFrame()
     {
-        yield return null;
+        yield return null; // wait one frame
         RaiseStyle(currentState, "Initial");
     }
 
@@ -61,10 +44,7 @@ public class StyleSwapManager : MonoBehaviour
 
     public void ToggleStyle()
     {
-        currentState = (currentState == StyleState.Modern)
-            ? StyleState.Retro
-            : StyleState.Modern;
-
+        currentState = (currentState == StyleState.Modern) ? StyleState.Retro : StyleState.Modern;
         RaiseStyle(currentState, "Toggle");
     }
 
@@ -76,17 +56,24 @@ public class StyleSwapManager : MonoBehaviour
 
     private void RaiseStyle(StyleState state, string reason)
     {
+        if (styleSwapEvent == null)
+        {
+            Debug.LogError("[StyleSwapManager] styleSwapEvent is NULL. Assign the shared StyleSwapEvent asset.");
+            return;
+        }
+
         if (verboseLogs)
             Debug.Log($"[StyleSwapManager] {reason} -> {state}");
 
-        // Broadcast visual state change.
+        // Broadcast style change
         styleSwapEvent.Raise(state);
 
-        // Keep audio presentation in sync with visual mode.
-        if (gameAudio != null)
+        // Sync audio snapshot with visual mode
+        var audio = FindFirstObjectByType<GameAudioManager>();
+        if (audio != null)
         {
-            if (state == StyleState.Modern) gameAudio.PlayModern();
-            else gameAudio.PlayRetro();
+            if (state == StyleState.Modern) audio.PlayModern();
+            else audio.PlayRetro();
         }
     }
 }

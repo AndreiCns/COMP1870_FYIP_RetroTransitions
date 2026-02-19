@@ -161,6 +161,31 @@ public class FirstPersonController : MonoBehaviour
             fireHeld = false;
     }
 
+    public void OnAmmo1(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.performed) return;
+        combat?.TrySetAmmoType(AmmoType.Bullet);
+    }
+
+    public void OnAmmo2(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.performed) return;
+        combat?.TrySetAmmoType(AmmoType.Shell);
+    }
+
+    public void OnAmmo3(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.performed) return;
+        combat?.TrySetAmmoType(AmmoType.Rocket);
+    }
+
+    public void OnAmmo4(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.performed) return;
+        combat?.TrySetAmmoType(AmmoType.Plasma);
+    }
+
+
     private void Update()
     {
         float dt = Time.deltaTime;

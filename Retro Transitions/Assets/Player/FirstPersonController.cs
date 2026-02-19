@@ -56,6 +56,10 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float recoilUp = 6f;
     [SerializeField] private float recoilRecovery = 12f;
 
+    [Header("Interact")]
+    [SerializeField] private float interactRange = 3f;
+    [SerializeField] private LayerMask interactMask = ~0;
+
     private Vector3 recoilCurrentPos;
     private Vector3 recoilTargetPos;
     private Vector3 recoilCurrentRot;
@@ -159,6 +163,12 @@ public class FirstPersonController : MonoBehaviour
             fireHeld = true;
         else if (ctx.canceled)
             fireHeld = false;
+    }
+
+    public void OnInteract(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.performed) return;
+        TryInteract();
     }
 
     public void OnAmmo1(InputAction.CallbackContext ctx)
@@ -390,6 +400,21 @@ public class FirstPersonController : MonoBehaviour
         {
             movementLowPass.cutoffFrequency = retroCutoff;
             movementLowPass.lowpassResonanceQ = retroResonanceQ;
+        }
+    }
+
+    private void TryInteract()
+    {
+        if (cam == null) return;
+
+        Ray ray = new Ray(cam.transform.position, cam.transform.forward);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactMask, QueryTriggerInteraction.Ignore))
+        {
+            IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
+            if (interactable == null) return;
+
+            interactable.Interact(gameObject);
         }
     }
 }

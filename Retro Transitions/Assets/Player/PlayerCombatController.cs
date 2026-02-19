@@ -1,12 +1,10 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerCombatController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private PlayerCombatState combatState;
     [SerializeField] private WeaponStyleSwap weaponStyleSwap;
-    [SerializeField] private Animator weaponAnimator;
 
     [Header("Shoot Modules")]
     [SerializeField] private PlayerShootModule modernShoot;
@@ -24,11 +22,10 @@ public class PlayerCombatController : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool verboseLogs = false;
 
-    private readonly string shootTrigger = "Fire";
-
     private float fireTimer;
     private StyleState currentStyle = StyleState.Modern;
 
+    // Fire logic should always target the currently active visual weapon module.
     private PlayerShootModule ActiveShoot =>
         (modernShoot != null && modernShoot.gameObject.activeInHierarchy) ? modernShoot :
         (retroShoot != null && retroShoot.gameObject.activeInHierarchy) ? retroShoot :
@@ -39,6 +36,7 @@ public class PlayerCombatController : MonoBehaviour
         if (combatState == null)
             combatState = GetComponent<PlayerCombatState>();
 
+        // CombatState is required: it owns ammo + selection rules.
         if (combatState == null)
         {
             Debug.LogError("[Combat] PlayerCombatState missing.", this);
@@ -46,9 +44,11 @@ public class PlayerCombatController : MonoBehaviour
             return;
         }
 
-        if (weaponAnimator == null)
-            Debug.LogWarning("[Combat] weaponAnimator not assigned.", this);
+        // Optional at runtime (you can still fire without style swapping), but warn early.
+        if (weaponStyleSwap == null)
+            Debug.LogWarning("[Combat] weaponStyleSwap not assigned.", this);
 
+        // Keeps config lookup predictable (Bullet/Rocket/Shell/Plasma).
         if (ammoTypeConfigs == null || ammoTypeConfigs.Length != 4)
             Debug.LogWarning("[Combat] ammoTypeConfigs should be length 4 (Bullet/Rocket/Shell/Plasma).", this);
     }
@@ -67,18 +67,19 @@ public class PlayerCombatController : MonoBehaviour
 
     private void Update()
     {
+        // Timer lives here so ROF stays deterministic regardless of input spam.
         if (fireTimer > 0f)
             fireTimer -= Time.deltaTime;
     }
 
-    public void TryFire()
+    public bool TryFire()
     {
         if (fireTimer > 0f)
-            return;
+            return false;
 
         var shoot = ActiveShoot;
         if (shoot == null)
-            return;
+            return false;
 
         AmmoType type = combatState.CurrentAmmoType;
         AmmoTypeConfig cfg = GetConfig(type);
@@ -86,40 +87,44 @@ public class PlayerCombatController : MonoBehaviour
         if (cfg == null)
         {
             if (verboseLogs) Debug.LogWarning($"[Combat] Missing config for {type}.", this);
-            return;
+            return false;
         }
 
+        // Lock first so ammo consumption can never happen twice per accepted shot.
+        if (!shoot.TryBeginFire(cfg.fireCooldown))
+            return false;
+
+        // Ammo is consumed only here (single source of truth).
         if (!combatState.TryConsumeAmmo(ammoPerShot))
         {
             if (verboseLogs) Debug.Log("[Combat] Click (no ammo).", this);
-            return;
+            return false;
         }
 
-        // Configure the shot BEFORE the anim event fires.
+        // Push per-shot parameters before the anim event fires.
         shoot.SetDamage(cfg.damage);
 
+        // Style determines which muzzle flash variant to use.
         MuzzleFlashController flashOverride = GetMuzzleOverride(cfg);
         if (flashOverride != null)
             shoot.SetMuzzleFlash(flashOverride);
 
-        // Shoot module gates timing (anim must finish)
-        if (!shoot.TryBeginFire())
-            return;
-
-        if (weaponAnimator != null)
-            weaponAnimator.SetTrigger(shootTrigger);
-
+        // Visual fire is driven by the active weapon animator (matches the anim event timing).
         weaponStyleSwap?.Fire();
 
         fireTimer = cfg.fireCooldown;
 
         if (verboseLogs)
             Debug.Log($"[Combat] Fired {type} | dmg={cfg.damage} cd={cfg.fireCooldown}", this);
+
+        return true;
     }
 
     public bool TrySetAmmoType(AmmoType type)
     {
+        // Selection rules live in CombatState (e.g., locked types if ammo = 0).
         bool ok = combatState.TrySetCurrentAmmoType(type);
+
         if (verboseLogs)
             Debug.Log($"[Combat] AmmoType -> {type} ({(ok ? "OK" : "LOCKED")})", this);
 

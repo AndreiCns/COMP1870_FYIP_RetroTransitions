@@ -7,7 +7,7 @@ public class FirstPersonController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform playerCamera;
-    [SerializeField] private Transform weaponHolder; 
+    [SerializeField] private Transform weaponHolder;
     [SerializeField] private Camera cam;
     [SerializeField] private Transform weaponRecoil;
     [SerializeField] private PlayerCombatController combat;
@@ -24,7 +24,6 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float landingVolume = 1f;
 
     [Header("Retro Audio")]
-    // Quick “retro” muffling on movement sounds
     [SerializeField] private AudioLowPassFilter movementLowPass;
     [SerializeField] private StyleSwapEvent styleSwapEvent;
     [SerializeField] private float retroCutoff = 1200f;
@@ -65,9 +64,9 @@ public class FirstPersonController : MonoBehaviour
     private float bobTimer;
     private float defaultFOV;
     private Coroutine fovKickRoutine;
-   
+
     private Vector3 weaponHolderInitialLocalPos;
-    
+
     private CharacterController controller;
     private Vector2 moveInput;
     private Vector2 lookInput;
@@ -77,11 +76,14 @@ public class FirstPersonController : MonoBehaviour
     private float stepTimer;
     private bool wasGrounded;
 
+    // Held-fire prevents InputSystem "performed" spam and keeps ROF deterministic.
+    private bool fireHeld;
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
 
+        // Movement SFX is critical for feedback; fail early if it's missing.
         if (movementSfxSource == null)
         {
             Debug.LogError("[FPC] movementSfxSource not assigned.", this);
@@ -89,16 +91,16 @@ public class FirstPersonController : MonoBehaviour
             return;
         }
 
-        // Low-pass sits on the same object as the movement AudioSource
+        // Keep the low-pass on the movement source so retro mode is a simple toggle.
         if (movementLowPass == null)
             movementLowPass = movementSfxSource.GetComponent<AudioLowPassFilter>();
 
         if (movementLowPass == null)
             movementLowPass = movementSfxSource.gameObject.AddComponent<AudioLowPassFilter>();
 
+        // Combat is optional at edit-time, but the controller expects it at runtime.
         if (combat == null)
             combat = GetComponent<PlayerCombatController>();
-
     }
 
     private void OnEnable()
@@ -109,7 +111,7 @@ public class FirstPersonController : MonoBehaviour
             Debug.LogWarning("[FPC] styleSwapEvent not assigned.", this);
 
         if (verboseLogs)
-            Debug.Log($"[FPC] movementSfxSource={movementSfxSource.name}, lowPass={(movementLowPass ? "OK" : "NULL")}");
+            Debug.Log($"[FPC] movementSfxSource={movementSfxSource.name}, lowPass={(movementLowPass ? "OK" : "NULL")}", this);
     }
 
     private void OnDisable()
@@ -120,7 +122,7 @@ public class FirstPersonController : MonoBehaviour
 
     private void Start()
     {
-        // If these are missing, I’d rather fail early than hunt nulls later
+        // These are hard requirements; better to disable than chase nulls mid-playtest.
         if (cam == null || playerCamera == null || weaponHolder == null || weaponRecoil == null)
         {
             Debug.LogError($"[FPC] Missing required references on '{gameObject.name}'.", this);
@@ -131,13 +133,15 @@ public class FirstPersonController : MonoBehaviour
         defaultFOV = cam.fieldOfView;
         weaponHolderInitialLocalPos = weaponHolder.localPosition;
 
+        // FPS feel: lock cursor by default.
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
+        // Start in modern unless style system tells us otherwise.
         ApplyMovementFilter(isRetro: false);
     }
 
-    // INPUT
+    // InputSystem callbacks
     public void OnMove(InputAction.CallbackContext ctx) => moveInput = ctx.ReadValue<Vector2>();
     public void OnLook(InputAction.CallbackContext ctx) => lookInput = ctx.ReadValue<Vector2>();
 
@@ -151,30 +155,42 @@ public class FirstPersonController : MonoBehaviour
 
     public void OnFire(InputAction.CallbackContext ctx)
     {
-        if (!ctx.performed) return;
-
-        if (combat != null)
-            combat.TryFire();
-
-        // Recoil is local feel, keep it here.
-        recoilTargetPos -= new Vector3(0, 0, recoilKickback);
-        recoilTargetRot += new Vector3(-recoilUp, 0, 0);
+        if (ctx.started)
+            fireHeld = true;
+        else if (ctx.canceled)
+            fireHeld = false;
     }
-
 
     private void Update()
     {
         float dt = Time.deltaTime;
+
         HandleLook(dt);
         HandleMovement(dt);
+
+        // Fire attempts are polled so cooldown + ammo are always the single source of truth.
+        if (fireHeld && combat != null)
+        {
+            if (combat.TryFire())
+                ApplyRecoilKick();
+        }
     }
 
     private void LateUpdate()
     {
         float dt = Time.deltaTime;
+
+        // LateUpdate keeps weapon visuals smooth after movement/camera updates.
         HandleWeaponBob(dt);
         SyncWeaponToCamera();
         HandleWeaponRecoil(dt);
+    }
+
+    private void ApplyRecoilKick()
+    {
+        // Only kick on a confirmed shot (not on input press).
+        recoilTargetPos -= new Vector3(0, 0, recoilKickback);
+        recoilTargetRot += new Vector3(-recoilUp, 0, 0);
     }
 
     private void HandleLook(float dt)
@@ -193,7 +209,7 @@ public class FirstPersonController : MonoBehaviour
     {
         bool isGroundedNow = controller.isGrounded;
 
-        // Landing check: air -> ground with some downward speed
+        // Landing sound only on actual air->ground transitions with noticeable fall speed.
         if (!wasGrounded && isGroundedNow && velocity.y < -2f)
             PlayLandingSFX();
 
@@ -201,7 +217,7 @@ public class FirstPersonController : MonoBehaviour
 
         if (controller.isGrounded && velocity.y < 0f)
         {
-            velocity.y = -2f; // helps the controller stick to ground
+            velocity.y = -2f; // Keeps the controller planted on slopes/steps.
             jumpCount = 0;
         }
 
@@ -327,13 +343,14 @@ public class FirstPersonController : MonoBehaviour
 
     private void SyncWeaponToCamera()
     {
+        // Keeps the weapon orientation locked to the camera even during character rotation.
         weaponHolder.rotation = playerCamera.rotation;
     }
 
     private void OnStyleChanged(StyleState newState)
     {
         if (verboseLogs)
-            Debug.Log($"[FPC] Style -> {newState}");
+            Debug.Log($"[FPC] Style -> {newState}", this);
 
         ApplyMovementFilter(newState == StyleState.Retro);
     }

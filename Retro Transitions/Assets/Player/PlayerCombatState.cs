@@ -13,15 +13,14 @@ public class PlayerCombatState : MonoBehaviour
     [Header("Ammo")]
     [SerializeField] private AmmoType currentAmmoType = AmmoType.Bullet;
 
-    [Tooltip("Ammo counts per type, index matches AmmoType enum order.")]
+    // Index matches AmmoType enum order.
     [SerializeField] private int[] ammoCounts = new int[4] { 99, 0, 0, 0 };
 
-    [Tooltip("Max ammo per type, index matches AmmoType enum order.")]
+    // Max per ammo type (same enum indexing).
     [SerializeField] private int[] ammoMax = new int[4] { 200, 50, 50, 300 };
 
-
     [Header("Unlocks")]
-    [Tooltip("Unlocked ammo types. Upgrade tier is derived from this.")]
+    // Unlock state per ammo type (used for progression logic).
     [SerializeField] private bool[] ammoUnlocked = new bool[4] { true, false, false, false };
 
     [Header("Keys (optional)")]
@@ -34,33 +33,41 @@ public class PlayerCombatState : MonoBehaviour
     public int GetAmmo(AmmoType type)
     {
         int i = (int)type;
+
         if (ammoCounts == null || ammoCounts.Length < 4) return 0;
         if (i < 0 || i >= ammoCounts.Length) return 0;
+
         return ammoCounts[i];
     }
 
     public void SetAmmo(AmmoType type, int amount)
     {
         EnsureArrays();
+
         int i = (int)type;
         int max = GetAmmoMax(type);
-        ammoCounts[(int)type] = Mathf.Max(0, amount);
+
+        // Clamp to valid range; prevents negative ammo bugs.
+        ammoCounts[i] = Mathf.Clamp(amount, 0, max);
     }
 
     public bool IsAmmoUnlocked(AmmoType type)
     {
         int i = (int)type;
+
         if (ammoUnlocked == null || ammoUnlocked.Length < 4) return false;
         if (i < 0 || i >= ammoUnlocked.Length) return false;
+
         return ammoUnlocked[i];
     }
 
+    // Tier = number of unlocked ammo types (used for progression scaling).
     public int UpgradeTier
     {
         get
         {
-            // Tier is number of unlocked ammo types (1..4).
             int count = 0;
+
             for (int i = 0; i < 4; i++)
                 if (ammoUnlocked != null && ammoUnlocked.Length > i && ammoUnlocked[i])
                     count++;
@@ -77,10 +84,10 @@ public class PlayerCombatState : MonoBehaviour
     {
         EnsureArrays();
 
-        // Always keep at least Bullet unlocked.
+        // Bullet must always remain available.
         ammoUnlocked[(int)AmmoType.Bullet] = true;
 
-        // If current type is locked, fall back to Bullet.
+        // Fallback safety if current selection becomes invalid.
         if (!IsAmmoUnlocked(currentAmmoType))
             currentAmmoType = AmmoType.Bullet;
     }
@@ -99,7 +106,9 @@ public class PlayerCombatState : MonoBehaviour
         if (amount <= 0) return true;
 
         int current = GetAmmo(currentAmmoType);
-        if (current < amount) return false;
+
+        if (current < amount)
+            return false;
 
         SetAmmo(currentAmmoType, current - amount);
         return true;
@@ -112,6 +121,7 @@ public class PlayerCombatState : MonoBehaviour
         int i = (int)type;
         ammoUnlocked[i] = true;
 
+        // Optional starter ammo on unlock.
         if (giveStarterAmmo && ammoCounts[i] <= 0)
             ammoCounts[i] = Mathf.Max(0, starterAmmo);
     }
@@ -122,6 +132,7 @@ public class PlayerCombatState : MonoBehaviour
 
     private void EnsureArrays()
     {
+        // Defensive guard in case inspector resets array sizes.
         if (ammoCounts == null || ammoCounts.Length != 4)
             ammoCounts = new int[4];
 
@@ -131,15 +142,17 @@ public class PlayerCombatState : MonoBehaviour
         if (ammoMax == null || ammoMax.Length != 4)
             ammoMax = new int[4];
 
-        // Avoid “all false” state if something resets in inspector.
+        // Always keep Bullet unlocked.
         ammoUnlocked[(int)AmmoType.Bullet] = true;
     }
 
     public int GetAmmoMax(AmmoType type)
     {
         int i = (int)type;
+
         if (ammoMax == null || ammoMax.Length < 4) return 0;
         if (i < 0 || i >= ammoMax.Length) return 0;
+
         return ammoMax[i];
     }
 
@@ -147,9 +160,7 @@ public class PlayerCombatState : MonoBehaviour
     {
         int cur = GetAmmo(type);
         int max = GetAmmoMax(type);
+
         return $"{cur}/{max}";
     }
-
-
-
 }

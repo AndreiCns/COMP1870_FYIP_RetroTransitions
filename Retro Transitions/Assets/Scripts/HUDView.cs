@@ -21,7 +21,6 @@ public class HUDView : MonoBehaviour
     [SerializeField] private TMP_Text rowPlasmaLabel;
     [SerializeField] private TMP_Text rowPlasmaValue;
 
-
     [Header("Upgrades (4 slots)")]
     [SerializeField] private Image[] upgradeSlotBgs = new Image[4];
 
@@ -33,25 +32,49 @@ public class HUDView : MonoBehaviour
     [Header("Crosshair")]
     [SerializeField] private Image crosshair;
 
-    public void SetAmmo(int value) => SetText(ammoValue, value.ToString());
-    public void SetHealthPercent(int value) => SetText(healthValue, Mathf.Clamp(value, 0, 999).ToString());
+    // --- Core ---
 
+    public void SetAmmo(int value) => SetText(ammoValue, value.ToString());
+
+    public void SetHealthPercent(int value)
+    {
+        // Clamp defensively so HUD never shows weird negatives / overflow.
+        SetText(healthValue, Mathf.Clamp(value, 0, 999).ToString());
+    }
+
+    // --- Ammo panel ---
 
     public void SetAmmoRows(string bullet, string shell, string rocket, string plasma)
     {
+        // UI layer only: caller owns formatting (e.g., "12/50").
         SetText(rowBulletValue, bullet);
         SetText(rowShellValue, shell);
         SetText(rowRocketValue, rocket);
         SetText(rowPlasmaValue, plasma);
     }
 
+    public void SetAmmoRowHighlight(
+        AmmoType activeType,
+        bool bulletUnlocked,
+        bool shellUnlocked,
+        bool rocketUnlocked,
+        bool plasmaUnlocked)
+    {
+        // Alpha-only highlight so it works for both modern and retro UI skins.
+        SetRowAlpha(rowBulletLabel, rowBulletValue, activeType == AmmoType.Bullet, bulletUnlocked);
+        SetRowAlpha(rowShellLabel, rowShellValue, activeType == AmmoType.Shell, shellUnlocked);
+        SetRowAlpha(rowRocketLabel, rowRocketValue, activeType == AmmoType.Rocket, rocketUnlocked);
+        SetRowAlpha(rowPlasmaLabel, rowPlasmaValue, activeType == AmmoType.Plasma, plasmaUnlocked);
+    }
+
+    // --- Upgrades / Keys / Crosshair ---
 
     public void SetUpgradeUnlocked(int slotIndex, bool unlocked)
     {
         if (upgradeSlotBgs == null) return;
         if (slotIndex < 0 || slotIndex >= upgradeSlotBgs.Length) return;
 
-        var img = upgradeSlotBgs[slotIndex];
+        Image img = upgradeSlotBgs[slotIndex];
         if (img == null) return;
 
         Color c = img.color;
@@ -72,26 +95,25 @@ public class HUDView : MonoBehaviour
             crosshair.enabled = visible;
     }
 
+    // --- Internals ---
+
     private void SetText(TMP_Text t, string value)
     {
         if (t == null) return;
+
+        // Avoid unnecessary mesh rebuilds if the value hasn’t changed.
         if (t.text == value) return;
+
         t.text = value;
     }
 
     private void SetIconAlpha(Image img, bool on)
     {
         if (img == null) return;
+
         Color c = img.color;
         c.a = on ? 1f : 0.25f;
         img.color = c;
-    }
-    public void SetAmmoRowHighlight(AmmoType activeType, bool bulletUnlocked, bool shellUnlocked, bool rocketUnlocked, bool plasmaUnlocked)
-    {
-        SetRowAlpha(rowBulletLabel, rowBulletValue, activeType == AmmoType.Bullet, bulletUnlocked);
-        SetRowAlpha(rowShellLabel, rowShellValue, activeType == AmmoType.Shell, shellUnlocked);
-        SetRowAlpha(rowRocketLabel, rowRocketValue, activeType == AmmoType.Rocket, rocketUnlocked);
-        SetRowAlpha(rowPlasmaLabel, rowPlasmaValue, activeType == AmmoType.Plasma, plasmaUnlocked);
     }
 
     private void SetRowAlpha(TMP_Text label, TMP_Text value, bool isActive, bool isUnlocked)
@@ -101,11 +123,11 @@ public class HUDView : MonoBehaviour
         float a;
 
         if (!isUnlocked)
-            a = 0.25f;          // locked
+            a = 0.25f; // locked
         else if (isActive)
-            a = 1f;             // active
+            a = 1f;    // active
         else
-            a = 0.55f;          // inactive but unlocked
+            a = 0.55f; // unlocked but inactive
 
         SetAlpha(label, a);
         SetAlpha(value, a);
@@ -119,5 +141,4 @@ public class HUDView : MonoBehaviour
         c.a = a;
         t.color = c;
     }
-
 }

@@ -12,9 +12,14 @@ public class WeaponStyleSwap : MonoBehaviour
     private Animator modernAnim;
     private Animator retroAnim;
 
+    // Cached state so we don’t check enum repeatedly.
+    private bool isRetroActive;
+
+    private static readonly int FireHash = Animator.StringToHash("Fire");
+
     private void Awake()
     {
-        // Cache animators once
+        // Cache animators once – no runtime GetComponent calls.
         if (modernWeapon != null)
             modernAnim = modernWeapon.GetComponentInChildren<Animator>();
 
@@ -36,22 +41,27 @@ public class WeaponStyleSwap : MonoBehaviour
 
     private void OnStyleChanged(StyleState newState)
     {
-        bool isRetro = newState == StyleState.Retro;
+        // This class only handles visuals. No gameplay logic here.
+        isRetroActive = newState == StyleState.Retro;
 
-        // Just toggle which weapon is visible
         if (modernWeapon != null)
-            modernWeapon.SetActive(!isRetro);
+            modernWeapon.SetActive(!isRetroActive);
 
         if (retroWeapon != null)
-            retroWeapon.SetActive(isRetro);
+            retroWeapon.SetActive(isRetroActive);
     }
 
     public void Fire()
     {
-        // Forward fire trigger to whichever weapon is currently active
-        if (retroWeapon != null && retroWeapon.activeSelf)
-            retroAnim?.SetTrigger("Fire");
-        else
-            modernAnim?.SetTrigger("Fire");
+        // Choose the currently visible weapon animator.
+        Animator a = isRetroActive ? retroAnim : modernAnim;
+        if (a == null) return;
+
+        // Guard against accidental re-trigger spam while already in fire state.
+        if (a.GetCurrentAnimatorStateInfo(0).IsName("shoot_001"))
+            return;
+
+        a.ResetTrigger(FireHash);
+        a.SetTrigger(FireHash);
     }
 }

@@ -13,10 +13,16 @@ public class StyleSwapManager : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool verboseLogs = true;
 
+    [Header("Transition FX (optional)")]
+    [SerializeField] private StyleSwapTransitionFX transitionFX;
+
     private StyleState currentState = StyleState.Modern;
     public StyleState CurrentState => currentState;
 
     private GameAudioManager gameAudio;
+
+    private bool isTransitioning;
+    private StyleState pendingTarget;
 
     private void Awake()
     {
@@ -28,7 +34,7 @@ public class StyleSwapManager : MonoBehaviour
             return;
         }
 
-        // Cache once; this is the central style brain.
+        // Central style brain; audio reacts to state.
         gameAudio = FindFirstObjectByType<GameAudioManager>();
     }
 
@@ -38,7 +44,7 @@ public class StyleSwapManager : MonoBehaviour
         if (toggleStyleAction != null)
             toggleStyleAction.action.performed += OnTogglePressed;
 
-        // Delay one frame so listeners have subscribed.
+        // Delay one frame so listeners are ready.
         StartCoroutine(RaiseInitialStyleNextFrame());
     }
 
@@ -51,42 +57,100 @@ public class StyleSwapManager : MonoBehaviour
     private IEnumerator RaiseInitialStyleNextFrame()
     {
         yield return null;
-        RaiseStyle(currentState, "Initial");
+        ApplyStyle(currentState, "Initial");
     }
 
     private void OnTogglePressed(InputAction.CallbackContext ctx)
     {
-        ToggleStyle();
+        // Debug-only toggle.
+        RequestStyleSwap("Toggle");
     }
 
-    public void ToggleStyle()
+    public void RequestStyleSwap(string reason)
     {
-        currentState = (currentState == StyleState.Modern)
+        // Prevent re-entry while transition is playing.
+        if (isTransitioning)
+            return;
+
+        if (transitionFX != null && transitionFX.IsPlaying)
+            return;
+
+        StyleState target =
+            (currentState == StyleState.Modern)
             ? StyleState.Retro
             : StyleState.Modern;
 
-        RaiseStyle(currentState, "Toggle");
+        // No FX assigned - swap instantly.
+        if (transitionFX == null || reason == "Initial")
+        {
+            ApplyStyle(target, reason);
+            return;
+        }
+
+        isTransitioning = true;
+        pendingTarget = target;
+
+        transitionFX.Play(
+            onMidpoint: () =>
+            {
+                // Commit state only at transition midpoint.
+                ApplyStyle(pendingTarget, reason);
+            },
+            onComplete: () =>
+            {
+                isTransitioning = false;
+            }
+        );
     }
 
-    public void ForceStyle(StyleState state)
+    public void ForceStyle(StyleState target, string reason = "Force")
+    {
+        // Ignore if already transitioning.
+        if (isTransitioning)
+            return;
+
+        // Ignore redundant requests.
+        if (currentState == target)
+            return;
+
+        if (transitionFX == null || reason == "Initial")
+        {
+            ApplyStyle(target, reason);
+            return;
+        }
+
+        isTransitioning = true;
+        pendingTarget = target;
+
+        transitionFX.Play(
+            onMidpoint: () =>
+            {
+                ApplyStyle(pendingTarget, reason);
+            },
+            onComplete: () =>
+            {
+                isTransitioning = false;
+            }
+        );
+    }
+
+    private void ApplyStyle(StyleState state, string reason)
     {
         currentState = state;
-        RaiseStyle(currentState, "Force");
-    }
 
-    private void RaiseStyle(StyleState state, string reason)
-    {
         if (verboseLogs)
-            Debug.Log($"[StyleSwapManager] {reason} -> {state}");
+            Debug.Log($"[StyleSwapManager] {reason} -> {currentState}");
 
-        // Broadcast visual state change.
-        styleSwapEvent.Raise(state);
+        // Broadcast to visual/audio listeners.
+        styleSwapEvent.Raise(currentState);
 
-        // Keep audio presentation in sync with visual mode.
+        // Audio mirrors visual state.
         if (gameAudio != null)
         {
-            if (state == StyleState.Modern) gameAudio.PlayModern();
-            else gameAudio.PlayRetro();
+            if (currentState == StyleState.Modern)
+                gameAudio.PlayModern();
+            else
+                gameAudio.PlayRetro();
         }
     }
 }

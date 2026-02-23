@@ -25,11 +25,6 @@ public class PlayerCombatController : MonoBehaviour
     private float fireTimer;
     private StyleState currentStyle = StyleState.Modern;
 
-    public bool IsOnCooldown => fireTimer > 0f;
-
-    // Useful if you want smoke intensity to fade out as cooldown ends.
-    public float CooldownRemaining => Mathf.Max(0f, fireTimer);
-
     // Fire logic should always target the currently active visual weapon module.
     private PlayerShootModule ActiveShoot =>
         (modernShoot != null && modernShoot.gameObject.activeInHierarchy) ? modernShoot :

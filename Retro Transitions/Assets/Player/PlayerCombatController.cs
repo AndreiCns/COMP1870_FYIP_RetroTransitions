@@ -22,15 +22,19 @@ public class PlayerCombatController : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool verboseLogs = false;
 
+    public AmmoType CurrentAmmoType => combatState != null ? combatState.CurrentAmmoType : AmmoType.Bullet;
+
+
     private float fireTimer;
+    private float lastShotCooldown = 0.01f; // used to normalize cooldown
     private StyleState currentStyle = StyleState.Modern;
 
     public bool IsOnCooldown => fireTimer > 0f;
-
-    // Useful if you want smoke intensity to fade out as cooldown ends.
     public float CooldownRemaining => Mathf.Max(0f, fireTimer);
 
-    // Fire logic should always target the currently active visual weapon module.
+    // 1 at shot start, 0 when ready again
+    public float Cooldown01 => Mathf.Clamp01(fireTimer / lastShotCooldown);
+
     private PlayerShootModule ActiveShoot =>
         (modernShoot != null && modernShoot.gameObject.activeInHierarchy) ? modernShoot :
         (retroShoot != null && retroShoot.gameObject.activeInHierarchy) ? retroShoot :
@@ -41,21 +45,12 @@ public class PlayerCombatController : MonoBehaviour
         if (combatState == null)
             combatState = GetComponent<PlayerCombatState>();
 
-        // CombatState is required: it owns ammo + selection rules.
         if (combatState == null)
         {
             Debug.LogError("[Combat] PlayerCombatState missing.", this);
             enabled = false;
             return;
         }
-
-        // Optional at runtime (you can still fire without style swapping), but warn early.
-        if (weaponStyleSwap == null)
-            Debug.LogWarning("[Combat] weaponStyleSwap not assigned.", this);
-
-        // Keeps config lookup predictable (Bullet/Rocket/Shell/Plasma).
-        if (ammoTypeConfigs == null || ammoTypeConfigs.Length != 4)
-            Debug.LogWarning("[Combat] ammoTypeConfigs should be length 4 (Bullet/Rocket/Shell/Plasma).", this);
     }
 
     private void OnEnable()
@@ -72,7 +67,7 @@ public class PlayerCombatController : MonoBehaviour
 
     private void Update()
     {
-        // Timer lives here so ROF stays deterministic regardless of input spam.
+        // Cooldown is authoritative here (prevents input spam bypassing ROF).
         if (fireTimer > 0f)
             fireTimer -= Time.deltaTime;
     }
@@ -90,56 +85,37 @@ public class PlayerCombatController : MonoBehaviour
         AmmoTypeConfig cfg = GetConfig(type);
 
         if (cfg == null)
-        {
-            if (verboseLogs) Debug.LogWarning($"[Combat] Missing config for {type}.", this);
             return false;
-        }
 
-        // Lock first so ammo consumption can never happen twice per accepted shot.
         if (!shoot.TryBeginFire(cfg.fireCooldown))
             return false;
 
-        // Ammo is consumed only here (single source of truth).
         if (!combatState.TryConsumeAmmo(ammoPerShot))
-        {
-            if (verboseLogs) Debug.Log("[Combat] Click (no ammo).", this);
             return false;
-        }
 
-        // Push per-shot parameters before the anim event fires.
         shoot.SetDamage(cfg.damage);
 
-        // Style determines which muzzle flash variant to use.
         MuzzleFlashController flashOverride = GetMuzzleOverride(cfg);
         if (flashOverride != null)
             shoot.SetMuzzleFlash(flashOverride);
 
-        // Visual fire is driven by the active weapon animator (matches the anim event timing).
         weaponStyleSwap?.Fire();
 
+        // Store for normalized fade.
+        lastShotCooldown = Mathf.Max(0.01f, cfg.fireCooldown);
         fireTimer = cfg.fireCooldown;
-
-        if (verboseLogs)
-            Debug.Log($"[Combat] Fired {type} | dmg={cfg.damage} cd={cfg.fireCooldown}", this);
 
         return true;
     }
 
     public bool TrySetAmmoType(AmmoType type)
     {
-        // Selection rules live in CombatState (e.g., locked types if ammo = 0).
-        bool ok = combatState.TrySetCurrentAmmoType(type);
-
-        if (verboseLogs)
-            Debug.Log($"[Combat] AmmoType -> {type} ({(ok ? "OK" : "LOCKED")})", this);
-
-        return ok;
+        return combatState.TrySetCurrentAmmoType(type);
     }
 
     private AmmoTypeConfig GetConfig(AmmoType type)
     {
         int i = (int)type;
-
         if (ammoTypeConfigs == null || ammoTypeConfigs.Length <= i)
             return null;
 
@@ -150,7 +126,7 @@ public class PlayerCombatController : MonoBehaviour
     {
         if (cfg == null) return null;
 
-        return (currentStyle == StyleState.Retro)
+        return currentStyle == StyleState.Retro
             ? cfg.retroMuzzleFlashOverride
             : cfg.modernMuzzleFlashOverride;
     }
@@ -158,5 +134,24 @@ public class PlayerCombatController : MonoBehaviour
     private void OnStyleChanged(StyleState newState)
     {
         currentStyle = newState;
+    }
+
+    public AmmoTypeConfig CurrentConfig
+    {
+        get
+        {
+            if (combatState == null) return null;
+            return GetConfig(combatState.CurrentAmmoType);
+        }
+    }
+
+    public bool ShouldPlayCooldownSmoke
+    {
+        get
+        {
+            AmmoTypeConfig cfg = CurrentConfig;
+            if (cfg == null) return true; // fail-safe: keep smoke on if missing config
+            return cfg.enableCooldownSmoke;
+        }
     }
 }

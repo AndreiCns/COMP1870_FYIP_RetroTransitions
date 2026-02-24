@@ -21,4 +21,8 @@ public class AmmoTypeConfig : ScriptableObject
 
     [Header("UI (optional)")]
     public string uiLabel = "BULL";
+
+    [Header("Cooldown Smoke")]
+    [Tooltip("If false, cooldown smoke won't play for this ammo type.")]
+    public bool enableCooldownSmoke = true;
 }

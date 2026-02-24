@@ -35,12 +35,9 @@ public class HUDFaceController : MonoBehaviour
         if (faceImage == null)
             faceImage = GetComponentInChildren<UnityEngine.UI.Image>();
 
-        
         if (health == null)
             health = FindFirstObjectByType<Health>();
 
-
-        // Face image is required; without it this component can't do anything useful.
         if (faceImage == null)
         {
             Debug.LogError("[HUDFace] faceImage missing.", this);
@@ -50,7 +47,6 @@ public class HUDFaceController : MonoBehaviour
 
     private void OnEnable()
     {
-        // React to damage so the hurt flash feels immediate.
         if (health != null)
             health.OnDamaged.AddListener(OnDamaged);
     }
@@ -65,7 +61,6 @@ public class HUDFaceController : MonoBehaviour
     {
         if (health == null) return;
 
-        // Hurt flash is a temporary override.
         if (isHurtFlashing)
             return;
 
@@ -77,7 +72,6 @@ public class HUDFaceController : MonoBehaviour
 
         float hp01 = health.Max <= 0f ? 0f : (health.Current / health.Max);
 
-        // Doom-style: only show "critical" when low, otherwise neutral.
         if (hp01 <= criticalThreshold01)
             SetFace(FaceState.Critical);
         else
@@ -86,14 +80,12 @@ public class HUDFaceController : MonoBehaviour
 
     private void OnDamaged(float amount)
     {
-        // If we died from the hit, force dead face immediately.
         if (health == null || health.IsDead)
         {
             SetFace(FaceState.Dead);
             return;
         }
 
-        // Restart flash so rapid hits still feel responsive.
         if (flashRoutine != null)
             StopCoroutine(flashRoutine);
 
@@ -105,18 +97,36 @@ public class HUDFaceController : MonoBehaviour
         isHurtFlashing = true;
         SetFace(FaceState.Hurt);
 
-        // Realtime so pause/slowmo doesn't break HUD feedback.
         yield return new WaitForSecondsRealtime(hurtFlashTime);
 
         isHurtFlashing = false;
         flashRoutine = null;
     }
 
+    public void SetFaceSprites(Sprite neutralSprite, Sprite hurtSprite, Sprite criticalSprite, Sprite deadSprite)
+    {
+        neutral = neutralSprite;
+        hurt = hurtSprite;
+        critical = criticalSprite;
+        dead = deadSprite;
+
+        if (!isHurtFlashing)
+            SetFace(GetCurrentFaceState());
+    }
+
+    private FaceState GetCurrentFaceState()
+    {
+        if (health == null) return FaceState.Neutral;
+        if (health.IsDead) return FaceState.Dead;
+
+        float hp01 = health.Max <= 0f ? 0f : (health.Current / health.Max);
+        return (hp01 <= criticalThreshold01) ? FaceState.Critical : FaceState.Neutral;
+    }
+
     private void SetFace(FaceState state)
     {
         if (faceImage == null) return;
 
-        // Graceful fallbacks so missing sprites don't hard-break the HUD.
         Sprite target = state switch
         {
             FaceState.Neutral => neutral,

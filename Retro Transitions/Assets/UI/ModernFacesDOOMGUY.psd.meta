@@ -1,0 +1,833 @@
+fileFormatVersion: 2
+guid: 0e824551334fcec4c94601b5aa679778
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 209
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 71d43df379a2ba24a9cf3ebc7002ad64
+      internalID: 609817497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_1
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 209
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 534906311356c95489ba7f9342fa1a01
+      internalID: -2075699044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_2
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 209
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8586cb7ee8e75ce479357a9b1505754f
+      internalID: 233191684
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_3
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 209
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4736afeeaee961743be89a2b07d94ea1
+      internalID: 2117066673
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_4
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 209
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5a89f2b9cf4ee774fa352ee753ce3710
+      internalID: 22518123
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_5
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 209
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 202eb39211c9cef4e8a05c40c3ba0ed5
+      internalID: -1551399119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 166
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f3d608df457c3a94ab0dd315179f6240
+      internalID: -1553382788
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_7
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 166
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cef9031338b022749a24a78ae6d0a3a1
+      internalID: -439589380
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_8
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 166
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3083b24b12b8afd46b490522f04d077b
+      internalID: 2107294743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_9
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 166
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c179fe24e22d5e547a7c7eb851085670
+      internalID: 46645580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_10
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 166
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ac69c43f3a239c40827a53dd839d517
+      internalID: 77888832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_11
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 166
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cb6c08147b2d6ca4db9969b74ddfeb6f
+      internalID: -1163094514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 123
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6d46a45a37bc65f42a4d158d9d938c91
+      internalID: -843720266
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_13
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 123
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dfd8a3d26c6025347884b3e25a96c8e8
+      internalID: 155155873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_14
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 123
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 95b0b64803795194390ad2dc8859b95f
+      internalID: -1667492174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_15
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 123
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bd38d23e1584fb04da400aec9a0e03ba
+      internalID: 1023401014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_16
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 123
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a82785c29885b6840887d778e885bba1
+      internalID: 908761805
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_17
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 123
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 861894fee5ce2c24da900c64b9b165b0
+      internalID: 342727948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_18
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 80
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d3171adc3732a714c8c713b9ba8bcbc8
+      internalID: 1685907517
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_19
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 80
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 428447f0bde645d419293d9bf06e6c96
+      internalID: 1039562149
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_20
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 80
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 57e114faad4c0364fb628a60ae97c660
+      internalID: 966789306
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_21
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 80
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ab2d229a31b05042bb305ebca63eb32
+      internalID: -1450829870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_22
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 80
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ac63b9a9afe453841bd27ec1a8788bc1
+      internalID: -1735930913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_23
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 80
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 914c17f10847a1147b590d13f9fef0ba
+      internalID: -191139423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_24
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 37
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7e703d7a03204f1449e70314a933a5bf
+      internalID: 1722846661
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_25
+      rect:
+        serializedVersion: 2
+        x: 33
+        y: 37
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 35cf58c6478eed0448d3f03474d42334
+      internalID: 421649984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_26
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 37
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 249aad0dda0472b4d9f716265d6c41d7
+      internalID: -297127093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_27
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 37
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e5bff8f78db786e43bcb20220d567229
+      internalID: -2069144863
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_28
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 37
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5ece77dbe184064fbef5d02540780e0
+      internalID: 472765822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ModernFacesDOOMGUY_29
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 37
+        width: 33
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a972bbc94b6ac834fb4dc6f8be3b3983
+      internalID: -864230858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 7a8f59e1d248b2545a7cfb2754ca21b4
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ModernFacesDOOMGUY_0: 609817497
+      ModernFacesDOOMGUY_1: -2075699044
+      ModernFacesDOOMGUY_10: 77888832
+      ModernFacesDOOMGUY_11: -1163094514
+      ModernFacesDOOMGUY_12: -843720266
+      ModernFacesDOOMGUY_13: 155155873
+      ModernFacesDOOMGUY_14: -1667492174
+      ModernFacesDOOMGUY_15: 1023401014
+      ModernFacesDOOMGUY_16: 908761805
+      ModernFacesDOOMGUY_17: 342727948
+      ModernFacesDOOMGUY_18: 1685907517
+      ModernFacesDOOMGUY_19: 1039562149
+      ModernFacesDOOMGUY_2: 233191684
+      ModernFacesDOOMGUY_20: 966789306
+      ModernFacesDOOMGUY_21: -1450829870
+      ModernFacesDOOMGUY_22: -1735930913
+      ModernFacesDOOMGUY_23: -191139423
+      ModernFacesDOOMGUY_24: 1722846661
+      ModernFacesDOOMGUY_25: 421649984
+      ModernFacesDOOMGUY_26: -297127093
+      ModernFacesDOOMGUY_27: -2069144863
+      ModernFacesDOOMGUY_28: 472765822
+      ModernFacesDOOMGUY_29: -864230858
+      ModernFacesDOOMGUY_3: 2117066673
+      ModernFacesDOOMGUY_4: 22518123
+      ModernFacesDOOMGUY_5: -1551399119
+      ModernFacesDOOMGUY_6: -1553382788
+      ModernFacesDOOMGUY_7: -439589380
+      ModernFacesDOOMGUY_8: 2107294743
+      ModernFacesDOOMGUY_9: 46645580
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -9,8 +9,6 @@ public class StyleSwapVisualToggle : MonoBehaviour
     [Header("Listen To")]
     [SerializeField] private StyleSwapEvent styleSwapEvent;
 
-    private StyleSwapManager styleSwapManager;
-
     private void Awake()
     {
         if (modernVisual == null || retroVisual == null)
@@ -19,23 +17,17 @@ public class StyleSwapVisualToggle : MonoBehaviour
             enabled = false;
             return;
         }
-
-        // Used for sync when objects spawn after initial broadcast.
-        styleSwapManager = FindFirstObjectByType<StyleSwapManager>();
-
-        // Safe default before we sync.
-        modernVisual.SetActive(true);
-        retroVisual.SetActive(false);
     }
 
     private void OnEnable()
     {
-        if (styleSwapEvent != null)
-            styleSwapEvent.OnStyleSwap += OnStyleChanged;
+        if (styleSwapEvent == null)
+            return;
 
-        // Sync immediately in case we're enabled after the initial event.
-        if (styleSwapManager != null)
-            OnStyleChanged(styleSwapManager.CurrentState);
+        styleSwapEvent.OnStyleSwap += OnStyleChanged;
+
+        // Immediate sync using stored state
+        OnStyleChanged(styleSwapEvent.LastState);
     }
 
     private void OnDisable()
@@ -48,7 +40,6 @@ public class StyleSwapVisualToggle : MonoBehaviour
     {
         bool isRetro = newState == StyleState.Retro;
 
-        // Visual swap only.
         modernVisual.SetActive(!isRetro);
         retroVisual.SetActive(isRetro);
     }

@@ -1,22 +1,13 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
-public class KeyPickup : MonoBehaviour
+public class KeyPickup : PickupBase
 {
     [SerializeField] private KeyType keyType;
 
-    private void Awake()
+    protected override bool TryApply(Collider player)
     {
-        Collider col = GetComponent<Collider>();
-        col.isTrigger = true;
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!other.CompareTag("Player")) return;
-
-        PlayerCombatState state = other.GetComponent<PlayerCombatState>();
-        if (state == null) return;
+        PlayerCombatState state = player.GetComponent<PlayerCombatState>();
+        if (state == null) return false;
 
         switch (keyType)
         {
@@ -31,6 +22,6 @@ public class KeyPickup : MonoBehaviour
                 break;
         }
 
-        Destroy(gameObject);
+        return true;
     }
 }

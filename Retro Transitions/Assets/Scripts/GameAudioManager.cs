@@ -80,4 +80,13 @@ public class GameAudioManager : MonoBehaviour
         playerSfxSource.pitch = Random.Range(0.9f, 1.0f);
         playerSfxSource.PlayOneShot(clip, Mathf.Clamp01(volume01) * playerSfxVolume);
     }
+
+    public void PlaySfxOneShot(AudioClip clip, float volume01 = 1f, float pitchMin = 0.95f, float pitchMax = 1.05f)
+    {
+        if (clip == null || playerSfxSource == null)
+            return;
+
+        playerSfxSource.pitch = Random.Range(pitchMin, pitchMax);
+        playerSfxSource.PlayOneShot(clip, Mathf.Clamp01(volume01) * playerSfxVolume);
+    }
 }

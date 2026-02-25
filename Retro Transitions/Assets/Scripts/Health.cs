@@ -14,6 +14,7 @@ public class Health : MonoBehaviour, IDamageable
     public float Max => maxHealth;
     public float Current { get; private set; }
     public bool IsDead => Current <= 0f;
+    public bool IsFullHealth => Current >= maxHealth;
 
     // Exposed as read-only so other scripts can subscribe
     public UnityEvent<float> OnDamaged => onDamaged;
@@ -37,5 +38,13 @@ public class Health : MonoBehaviour, IDamageable
             onDied?.Invoke();
     }
 
+    public void Heal(float amount)
+    {
+        if (IsDead || amount <= 0f) return;
+
+        Current = Mathf.Min(maxHealth, Current + amount);
+    }
+
     public void ResetHealth() => Current = maxHealth;
+
 }

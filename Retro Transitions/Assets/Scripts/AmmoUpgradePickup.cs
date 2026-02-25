@@ -1,7 +1,6 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
-public class AmmoUpgradePickup : MonoBehaviour
+public class AmmoUpgradePickup : PickupBase
 {
     [Header("Upgrade / Reward")]
     [SerializeField] private AmmoType ammoType = AmmoType.Shell;
@@ -9,23 +8,13 @@ public class AmmoUpgradePickup : MonoBehaviour
     [SerializeField] private bool unlockIfLocked = true;
     [SerializeField] private bool autoSwitchOnUnlock = true;
 
-    private void Awake()
+    protected override bool TryApply(Collider player)
     {
-        // Ensure this behaves as a trigger pickup
-        Collider col = GetComponent<Collider>();
-        col.isTrigger = true;
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!other.CompareTag("Player")) return;
-
-        PlayerCombatState state = other.GetComponent<PlayerCombatState>();
-        if (state == null) return;
+        PlayerCombatState state = player.GetComponent<PlayerCombatState>();
+        if (state == null) return false;
 
         bool wasUnlocked = state.IsAmmoUnlocked(ammoType);
 
-        // Unlock first so the player can immediately use it
         if (unlockIfLocked && !wasUnlocked)
             state.UnlockAmmoType(ammoType, giveStarterAmmo: false);
 
@@ -35,16 +24,15 @@ public class AmmoUpgradePickup : MonoBehaviour
             state.SetAmmo(ammoType, current + grantAmmoAmount);
         }
 
-        // Auto-equip only when this pickup actually unlocks something new
         if (autoSwitchOnUnlock && !wasUnlocked)
         {
-            PlayerCombatController combat = other.GetComponent<PlayerCombatController>();
+            PlayerCombatController combat = player.GetComponent<PlayerCombatController>();
             if (combat != null)
                 combat.TrySetAmmoType(ammoType);
             else
                 state.TrySetCurrentAmmoType(ammoType);
         }
 
-        Destroy(gameObject);
+        return true;
     }
 }

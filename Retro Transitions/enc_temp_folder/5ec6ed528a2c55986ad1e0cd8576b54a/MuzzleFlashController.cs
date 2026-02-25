@@ -5,25 +5,33 @@ public class MuzzleFlashController : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private Transform muzzle;
 
-    [Header("Retro Tuning")]
+    [Header("Modern")]
+    [SerializeField] private ParticleSystem modernFlash;
+    [SerializeField] private ParticleSystem modernSmoke;
+
+    [Header("Retro")]
+    [SerializeField] private SpriteRenderer retroSpritePrefab;
     [SerializeField] private float retroLife = 0.06f;
     [SerializeField] private float retroScale = 1.0f;
     [SerializeField] private bool randomFlipX = true;
 
     [Header("Style")]
-    [SerializeField] private StyleSwapEvent styleSwapEvent;
-    [SerializeField] private StyleSwapManager styleSwapManager;
+    [SerializeField] private StyleSwapEvent styleSwapEvent;   //  was VisualStyle enum
+    [SerializeField] private StyleSwapManager styleSwapManager; // for OnEnable sync
 
     [Header("Debug")]
     [SerializeField] private bool logWarnings = true;
 
     private StyleState currentStyle = StyleState.Modern;
 
+    //Lifecycle
+
     private void OnEnable()
     {
         if (styleSwapEvent != null)
             styleSwapEvent.OnStyleSwap += OnStyleSwap;
 
+        // Sync immediately in case this object activates after the initial broadcast
         if (styleSwapManager != null)
             OnStyleSwap(styleSwapManager.CurrentState);
     }
@@ -37,22 +45,15 @@ public class MuzzleFlashController : MonoBehaviour
     private void OnStyleSwap(StyleState state)
     {
         currentStyle = state;
+        if (currentStyle == StyleState.Retro)
+            StopModernVFX();
     }
 
-    // New API: config-driven
+    // Public API
+
     public void Play(AmmoTypeConfig cfg)
     {
-        if (cfg == null)
-        {
-            if (logWarnings) Debug.LogWarning($"{name}: Missing AmmoTypeConfig for muzzle flash.", this);
-            return;
-        }
-
-        if (muzzle == null)
-        {
-            if (logWarnings) Debug.LogWarning($"{name}: Missing muzzle reference.", this);
-            return;
-        }
+        if (cfg == null || muzzle == null) return;
 
         if (currentStyle == StyleState.Modern)
             PlayModern(cfg.GetModernPrefab());
@@ -62,30 +63,27 @@ public class MuzzleFlashController : MonoBehaviour
 
     private void PlayModern(GameObject modernPrefab)
     {
-        if (modernPrefab == null)
-        {
-            if (logWarnings) Debug.LogWarning($"{name}: Modern muzzle prefab not assigned.", this);
-            return;
-        }
-
+        if (modernPrefab == null) return;
         Instantiate(modernPrefab, muzzle.position, muzzle.rotation, muzzle);
     }
 
     private void PlayRetro(SpriteRenderer retroPrefab)
     {
-        if (retroPrefab == null)
-        {
-            if (logWarnings) Debug.LogWarning($"{name}: Retro sprite prefab not assigned.", this);
-            return;
-        }
+        if (retroPrefab == null) return;
 
         SpriteRenderer sr = Instantiate(retroPrefab, muzzle);
         sr.transform.localPosition = Vector3.forward * 0.05f;
         sr.transform.localRotation = Quaternion.identity;
         sr.transform.localScale = Vector3.one * retroScale;
-
         if (randomFlipX) sr.flipX = Random.value > 0.5f;
-
         Destroy(sr.gameObject, retroLife);
+    }
+
+    private void StopModernVFX()
+    {
+        if (modernFlash != null)
+            modernFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (modernSmoke != null)
+            modernSmoke.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 }

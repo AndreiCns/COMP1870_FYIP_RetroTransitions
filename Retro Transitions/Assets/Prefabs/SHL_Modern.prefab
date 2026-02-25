@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5791281347814084101}
   - component: {fileID: 713495637949165346}
   m_Layer: 6
-  m_Name: PS_BLTSmoke_Modern
+  m_Name: PS_SHLSmoke_Modern
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4910,7 +4910,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8611433902367689490}
   m_Layer: 6
-  m_Name: BLT_Modern
+  m_Name: SHL_Modern
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4945,7 +4945,7 @@ GameObject:
   - component: {fileID: 8734817494793577002}
   - component: {fileID: 7438616703659309696}
   m_Layer: 6
-  m_Name: PS_BLTMuzzle_Modern
+  m_Name: PS_SHLMuzzle_Modern
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5156,7 +5156,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 1, b: 1, a: 1}
+      maxColor: {r: 0, g: 0.07710886, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}

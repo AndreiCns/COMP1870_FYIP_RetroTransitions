@@ -26,8 +26,7 @@ public class PlayerShootModule : MonoBehaviour
     private float fireLockTimer;
     private GameObject owner;
 
-    [SerializeField] private PlayerCombatController combatController;
-
+  
 
     private void Awake()
     {
@@ -77,7 +76,7 @@ public class PlayerShootModule : MonoBehaviour
     }
 
 
-    private void FireProjectileInternal(AmmoTypeConfig cfg)
+    public void FireProjectile()
     {
         if (playerCamera == null) return;
 
@@ -104,11 +103,5 @@ public class PlayerShootModule : MonoBehaviour
         {
             Debug.DrawRay(origin, direction * range, Color.yellow, 1f);
         }
-    }
-
-    public void FireProjectile()
-    {
-        if (combatController == null) return;
-        FireProjectileInternal(combatController.CurrentConfig);
     }
 }

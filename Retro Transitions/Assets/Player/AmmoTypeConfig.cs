@@ -12,11 +12,12 @@ public class AmmoTypeConfig : ScriptableObject
     [Tooltip("Seconds between shots for this ammo type (lower = faster).")]
     [Min(0.01f)] public float fireCooldown = 0.2f;
 
-    [Header("Muzzle VFX")]
-    [Tooltip("One flash controller per ammo type. It self-manages modern vs retro internally.")]
-    public MuzzleFlashController muzzleFlash;
+    [Header("Muzzle VFX Prefabs")]
+    public GameObject modernMuzzlePrefab;   // particle prefab
+    public SpriteRenderer retroSpritePrefab; // sprite prefab
 
-    public MuzzleFlashController GetMuzzleFlash() => muzzleFlash;
+    public GameObject GetModernPrefab() => modernMuzzlePrefab;
+    public SpriteRenderer GetRetroPrefab() => retroSpritePrefab;
 
     [Header("UI (optional)")]
     public string uiLabel = "BULL";
@@ -24,4 +25,11 @@ public class AmmoTypeConfig : ScriptableObject
     [Header("Cooldown Smoke")]
     [Tooltip("If false, cooldown smoke won't play for this ammo type.")]
     public bool enableCooldownSmoke = true;
+
+#if UNITY_EDITOR
+private void OnValidate()
+{
+    name = $"AmmoTypeConfig_{type}";
+}
+#endif
 }

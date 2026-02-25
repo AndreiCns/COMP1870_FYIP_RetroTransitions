@@ -103,7 +103,11 @@ public class PlayerCombatController : MonoBehaviour
             return false;
 
         activeShoot.SetDamage(cfg.damage);
-       
+
+        MuzzleFlashController flash = cfg.GetMuzzleFlash();
+        if (flash != null)
+            activeShoot.SetMuzzleFlash(flash);
+
         weaponStyleSwap?.Fire();
 
         lastShotCooldown = Mathf.Max(0.01f, cfg.fireCooldown);

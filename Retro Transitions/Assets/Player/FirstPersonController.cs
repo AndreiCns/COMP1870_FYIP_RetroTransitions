@@ -13,21 +13,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private PlayerCombatController combat;
 
     [Header("Audio")]
-    [Tooltip("Centralised audio brain (routes through mixer + snapshots).")]
-    [SerializeField] private GameAudioManager audioManager;
-
-    [Header("Movement SFX")]
-    [SerializeField] private AudioClip[] footstepClips;
-    [SerializeField] private float stepInterval = 0.5f;
-
-    [Header("Jump & Landing SFX")]
-    [SerializeField] private AudioClip jumpClip;
-    [SerializeField] private AudioClip landingClip;
-    [SerializeField] private float jumpVolume = 1f;
-    [SerializeField] private float landingVolume = 1f;
-
-    [Header("Debug")]
-    [SerializeField] private bool verboseLogs = false;
+    [SerializeField] private PlayerAudioController playerAudio;
 
     [Header("Look Settings")]
     [SerializeField] private float mouseSensitivity = 50f;
@@ -39,6 +25,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float jumpHeight = 1.5f;
     [SerializeField] private float gravity = -20f;
     [SerializeField] private int maxJumps = 2;
+    [SerializeField] private float stepInterval = 0.5f;
 
     [Header("FOV Kick")]
     [SerializeField] private float fovKickAmount = 8f;
@@ -49,8 +36,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float bobAmount = 0.03f;
 
     [Header("Weapon Recoil")]
-    [SerializeField] private float recoilKickback = 0.15f;
-    [SerializeField] private float recoilUp = 6f;
+    
     [SerializeField] private float recoilRecovery = 12f;
 
     [Header("Interact")]
@@ -85,12 +71,8 @@ public class FirstPersonController : MonoBehaviour
         controller = GetComponent<CharacterController>();
 
         // Audio manager is optional for edit-time, but expected at runtime.
-        if (audioManager == null)
-            audioManager = FindFirstObjectByType<GameAudioManager>();
-
-        if (audioManager == null && verboseLogs)
-            Debug.LogWarning("[FPC] GameAudioManager not found. Movement SFX will be silent.", this);
-
+        if (playerAudio == null)
+            playerAudio = GetComponent<PlayerAudioController>();
         // Combat is optional at edit-time, but the controller expects it at runtime.
         if (combat == null)
             combat = GetComponent<PlayerCombatController>();
@@ -256,21 +238,10 @@ public class FirstPersonController : MonoBehaviour
         fovKickRoutine = StartCoroutine(FOVKick());
     }
 
-    private void PlayJumpSFX()
-    {
-        if (jumpClip == null) return;
+    private void PlayJumpSFX() => playerAudio?.PlayJump();
+    private void PlayLandingSFX() => playerAudio?.PlayLanding();
 
-        // Centralised playback (mixer snapshots handle retro globally).
-        audioManager?.PlayJump(jumpClip, jumpVolume);
-    }
-
-    private void PlayLandingSFX()
-    {
-        if (landingClip == null) return;
-
-        // Centralised playback (mixer snapshots handle retro globally).
-        audioManager?.PlayLanding(landingClip, landingVolume);
-    }
+    private void PlayFootstepSFX() => playerAudio?.PlayFootstep();
 
     private void HandleFootsteps(float dt, float moveAmount)
     {
@@ -289,15 +260,6 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
-    private void PlayFootstepSFX()
-    {
-        if (footstepClips == null || footstepClips.Length == 0) return;
-
-        int index = Random.Range(0, footstepClips.Length);
-
-        // Centralised playback (mixer snapshots handle retro globally).
-        audioManager?.PlayFootstep(footstepClips[index], 1f);
-    }
 
     private IEnumerator FOVKick()
     {

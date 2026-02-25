@@ -10,7 +10,7 @@ public class EnemyDamageFeedback : MonoBehaviour
     [SerializeField] private StyleSwapEvent styleSwapEvent;
 
     [Header("Audio (spatial)")]
-    [SerializeField] private GameAudioManager gameAudio;
+    [Tooltip("Enemy-local AudioSource (should be routed to EnemySFX mixer group).")]
     [SerializeField] private AudioSource audioSource;
 
     [Header("Hit SFX")]
@@ -83,9 +83,6 @@ public class EnemyDamageFeedback : MonoBehaviour
         if (vfxSpawnPoint == null)
             vfxSpawnPoint = transform;
 
-        if (gameAudio == null)
-            gameAudio = FindFirstObjectByType<GameAudioManager>();
-
         if (retroHitSprite != null)
             retroHitSprite.enabled = false;
 
@@ -155,12 +152,7 @@ public class EnemyDamageFeedback : MonoBehaviour
         if (clip == null)
             return;
 
-        if (gameAudio != null)
-        {
-            gameAudio.PlayOneShotOnSource(audioSource, clip, volume, pitchMin, pitchMax);
-            return;
-        }
-
+        // Enemy audio is spatial + local; routing is handled by the AudioSource mixer group in the inspector.
         audioSource.pitch = Random.Range(pitchMin, pitchMax);
         audioSource.PlayOneShot(clip, volume);
     }

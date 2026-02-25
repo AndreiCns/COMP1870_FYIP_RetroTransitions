@@ -4973,10 +4973,12 @@ GameObject:
   - component: {fileID: 6476569269031286722}
   - component: {fileID: 2585605201410639170}
   - component: {fileID: 1541105045105099670}
+  - component: {fileID: 8671041110013101001}
   - component: {fileID: 4292444458556407963}
   - component: {fileID: 7472253983651204765}
   - component: {fileID: 2908932743801730368}
   - component: {fileID: 4289652311453750825}
+  - component: {fileID: 2061056160210904787}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -5360,16 +5362,7 @@ MonoBehaviour:
   cam: {fileID: 2849294927014952559}
   weaponRecoil: {fileID: 2965406063998055267}
   combat: {fileID: 2908932743801730368}
-  audioManager: {fileID: 0}
-  footstepClips:
-  - {fileID: 8300000, guid: 9ff53c7dfea8c184ca0bc94a98381153, type: 3}
-  - {fileID: 8300000, guid: fbf86b6a7a115994d925de1c159f0e9d, type: 3}
-  stepInterval: 0.4
-  jumpClip: {fileID: 8300000, guid: c244094f15b377948a81110ade94f421, type: 3}
-  landingClip: {fileID: 8300000, guid: 9f4cf8460fa10f84e8ca83d295ec02fc, type: 3}
-  jumpVolume: 1
-  landingVolume: 1
-  verboseLogs: 1
+  playerAudio: {fileID: 8671041110013101001}
   mouseSensitivity: 15
   minPitch: -70
   maxPitch: 70
@@ -5377,17 +5370,53 @@ MonoBehaviour:
   jumpHeight: 1.5
   gravity: -20
   maxJumps: 2
+  stepInterval: 0.4
   fovKickAmount: 2
   fovKickTime: 0.08
   bobSpeed: 7
   bobAmount: 0.004
-  recoilKickback: 0.15
-  recoilUp: 6
   recoilRecovery: 12
   interactRange: 3
   interactMask:
     serializedVersion: 2
     m_Bits: 256
+--- !u!114 &8671041110013101001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5035748561986375114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29fd22952df0a0649a0501b29c9e57cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: {fileID: 2585605201410639170}
+  oneShotSource: {fileID: 4292444458556407963}
+  heartbeatSource: {fileID: 2061056160210904787}
+  playerSfxGroup: {fileID: 101622701671323166, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
+  masterVolume01: 2
+  footstepClips:
+  - {fileID: 8300000, guid: 9ff53c7dfea8c184ca0bc94a98381153, type: 3}
+  - {fileID: 8300000, guid: fbf86b6a7a115994d925de1c159f0e9d, type: 3}
+  footstepVolume01: 1
+  footstepPitchRange: {x: 0.95, y: 1.05}
+  jumpClip: {fileID: 8300000, guid: c244094f15b377948a81110ade94f421, type: 3}
+  jumpVolume01: 1
+  jumpPitchRange: {x: 0.95, y: 1.05}
+  landingClip: {fileID: 8300000, guid: 9f4cf8460fa10f84e8ca83d295ec02fc, type: 3}
+  landingVolume01: 1
+  landingPitchRange: {x: 0.9, y: 1}
+  hurtClip: {fileID: 0}
+  hurtVolume01: 1
+  hurtPitchRange: {x: 0.98, y: 1.02}
+  hurtMinInterval: 0.15
+  heartbeatLoop: {fileID: 0}
+  heartbeatVolume01: 1
+  lowHpThreshold01: 0.25
+  hysteresis01: 0.05
+  heartbeatCheckInterval: 0.1
 --- !u!82 &4292444458556407963
 AudioSource:
   m_ObjectHideFlags: 0
@@ -5397,7 +5426,7 @@ AudioSource:
   m_GameObject: {fileID: 5035748561986375114}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 101622701671323166, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
@@ -5445,7 +5474,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -5551,6 +5580,103 @@ MonoBehaviour:
   fadePower: 1
   modernMinSize: 0.015
   modernMaxSize: 0.045
+--- !u!82 &2061056160210904787
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5035748561986375114}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 101622701671323166, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &5182078448854618902
 GameObject:
   m_ObjectHideFlags: 0
@@ -6010,7 +6136,7 @@ MonoBehaviour:
   muzzle: {fileID: 5030056940090122349}
   muzzleFlash: {fileID: 3685315022970227291}
   combatController: {fileID: 2908932743801730368}
-  audioManager: {fileID: 0}
+  playerAudio: {fileID: 8671041110013101001}
   damage: 10
   range: 200
   hitMask:
@@ -6178,7 +6304,7 @@ MonoBehaviour:
   muzzle: {fileID: 5030056940090122349}
   muzzleFlash: {fileID: 1693364570441993171}
   combatController: {fileID: 2908932743801730368}
-  audioManager: {fileID: 0}
+  playerAudio: {fileID: 8671041110013101001}
   damage: 10
   range: 200
   hitMask:

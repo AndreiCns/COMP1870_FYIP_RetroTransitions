@@ -6,7 +6,8 @@ public abstract class PickupBase : MonoBehaviour
     [Header("Consume")]
     [SerializeField] private bool destroyOnPickup = true;
 
-    [Header("Audio (routed via GameAudioManager)")]
+    [Header("Audio (player-routed)")]
+    [Tooltip("Plays through the player's PlayerAudioController (PlayerSFX mixer group).")]
     [SerializeField] private AudioClip pickupSfx;
     [SerializeField] private float pickupVolume01 = 1f;
     [SerializeField] private Vector2 pickupPitchRange = new Vector2(0.98f, 1.02f);
@@ -29,7 +30,6 @@ public abstract class PickupBase : MonoBehaviour
     [SerializeField] private bool useUnscaledTime = true;
 
     private Collider col;
-    private GameAudioManager audioManager;
 
     private Vector3 modernStartLocalPos;
     private float timeOffset;
@@ -38,10 +38,6 @@ public abstract class PickupBase : MonoBehaviour
     {
         col = GetComponent<Collider>();
         col.isTrigger = true;
-
-        audioManager = FindFirstObjectByType<GameAudioManager>();
-        if (audioManager == null)
-            Debug.LogWarning($"{name}: No GameAudioManager found. Pickup SFX will be silent.", this);
 
         if (modernVisualRoot != null)
         {
@@ -77,8 +73,15 @@ public abstract class PickupBase : MonoBehaviour
         if (!TryApply(other))
             return;
 
-        if (pickupSfx != null && audioManager != null)
-            audioManager.PlaySfxOneShot(pickupSfx, pickupVolume01, pickupPitchRange.x, pickupPitchRange.y);
+        // Keep pickups "player-heard" and snapshot-consistent by routing through PlayerAudioController.
+        if (pickupSfx != null)
+        {
+            PlayerAudioController pac = other.GetComponentInParent<PlayerAudioController>();
+            if (pac != null)
+                pac.PlayOneShot2D(pickupSfx, pickupVolume01, pickupPitchRange);
+            else
+                Debug.LogWarning($"{name}: No PlayerAudioController found on Player. Pickup SFX will be silent.", this);
+        }
 
         Consume();
     }

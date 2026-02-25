@@ -9,7 +9,7 @@ public class PlayerShootModule : MonoBehaviour
 
     [Header("Refs")]
     [SerializeField] private PlayerCombatController combatController;
-    [SerializeField] private GameAudioManager audioManager;
+    [SerializeField] private PlayerAudioController playerAudio;
 
     [Header("Tuning")]
     [SerializeField] private float damage = 10f;
@@ -19,6 +19,8 @@ public class PlayerShootModule : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool drawDebugRay = false;
     [SerializeField] private bool logWarnings = true;
+
+    
 
     public bool CanFire => fireLockTimer <= 0f;
 
@@ -35,8 +37,9 @@ public class PlayerShootModule : MonoBehaviour
             Debug.LogWarning($"{name}: muzzle not assigned", this);
         if (combatController == null && logWarnings)
             Debug.LogWarning($"{name}: combatController not assigned", this);
-        if (audioManager == null && logWarnings)
-            Debug.LogWarning($"{name}: audioManager not assigned", this);
+        if (playerAudio == null && logWarnings)
+            Debug.LogWarning($"{name}: playerAudio not assigned", this);
+
     }
 
     private void OnEnable()
@@ -76,7 +79,7 @@ public class PlayerShootModule : MonoBehaviour
         muzzleFlash?.Play(cfg);
 
         // SFX (per ammo type clip handled by audio manager)
-        audioManager?.PlayGunshot(cfg);
+        playerAudio?.PlayGunshot(cfg);
 
         Vector3 origin = playerCamera.transform.position;
         Vector3 direction = playerCamera.transform.forward;

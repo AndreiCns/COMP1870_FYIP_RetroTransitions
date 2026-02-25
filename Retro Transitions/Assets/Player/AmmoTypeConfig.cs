@@ -29,6 +29,7 @@ public class AmmoTypeConfig : ScriptableObject
     [Header("SFX")]
     public AudioClip gunshotClip;
     public Vector2 gunshotPitch = new Vector2(0.97f, 1.03f);
+    public float gunshotVolume01 = 0.8f;
 
     [Header("Recoil")]
     [Tooltip("Local Z kickback applied per shot (bigger = more push back).")]

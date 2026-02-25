@@ -285,6 +285,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c855456e33c05cc4ab1a701056721ce6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  destroyOnPickup: 1
+  pickupSfx: {fileID: 0}
+  pickupVolume01: 1
+  pickupPitchRange: {x: 0.98, y: 1.02}
+  modernVisualRoot: {fileID: 6547490773959928473}
+  enableModernMotion: 1
+  floatAmplitude: 0.15
+  floatFrequency: 1.25
+  rotateYawSpeed: 90
+  useUnscaledTime: 1
   ammoType: 1
   grantAmmoAmount: 50
   unlockIfLocked: 1

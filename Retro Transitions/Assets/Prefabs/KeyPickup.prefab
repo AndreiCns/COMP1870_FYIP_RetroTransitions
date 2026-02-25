@@ -171,6 +171,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04cd75177f14f4428417cb490301ec9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  destroyOnPickup: 1
+  pickupSfx: {fileID: 0}
+  pickupVolume01: 1
+  pickupPitchRange: {x: 0.98, y: 1.02}
+  modernVisualRoot: {fileID: 2128911257336452381}
+  enableModernMotion: 1
+  floatAmplitude: 0.15
+  floatFrequency: 1.25
+  rotateYawSpeed: 90
+  useUnscaledTime: 1
   keyType: 0
 --- !u!114 &6241867402879542362
 MonoBehaviour:

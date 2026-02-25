@@ -101,6 +101,12 @@ MonoBehaviour:
   pickupSfx: {fileID: 0}
   pickupVolume01: 1
   pickupPitchRange: {x: 0.98, y: 1.02}
+  modernVisualRoot: {fileID: 9167318306243895812}
+  enableModernMotion: 1
+  floatAmplitude: 0.15
+  floatFrequency: 1.25
+  rotateYawSpeed: 90
+  useUnscaledTime: 1
   ammoType: 3
   grantAmmoAmount: 50
   unlockIfLocked: 1

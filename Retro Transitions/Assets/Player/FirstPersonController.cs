@@ -174,8 +174,10 @@ public class FirstPersonController : MonoBehaviour
         // Fire attempts are polled so cooldown + ammo are always the single source of truth.
         if (fireHeld && combat != null)
         {
+            AmmoTypeConfig cfg = combat.CurrentConfig;
+
             if (combat.TryFire())
-                ApplyRecoilKick();
+                ApplyRecoilKick(cfg);
         }
     }
 
@@ -189,11 +191,16 @@ public class FirstPersonController : MonoBehaviour
         HandleWeaponRecoil(dt);
     }
 
-    private void ApplyRecoilKick()
+    private void ApplyRecoilKick(AmmoTypeConfig cfg)
     {
-        // Only kick on a confirmed shot (not on input press).
-        recoilTargetPos -= new Vector3(0, 0, recoilKickback);
-        recoilTargetRot += new Vector3(-recoilUp, 0, 0);
+        if (cfg == null) return;
+
+        // Per-ammo recoil tuning.
+        recoilTargetPos -= new Vector3(0f, 0f, cfg.recoilKickback);
+        recoilTargetRot += new Vector3(-cfg.recoilUp, 0f, 0f);
+
+        // Optional: allow per-ammo recovery override by temporarily setting recovery speed.
+        recoilRecovery = Mathf.Max(0.01f, cfg.recoilRecovery);
     }
 
     private void HandleLook(float dt)

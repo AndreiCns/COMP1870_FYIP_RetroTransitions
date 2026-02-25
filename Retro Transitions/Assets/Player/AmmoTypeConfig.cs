@@ -30,6 +30,16 @@ public class AmmoTypeConfig : ScriptableObject
     public AudioClip gunshotClip;
     public Vector2 gunshotPitch = new Vector2(0.97f, 1.03f);
 
+    [Header("Recoil")]
+    [Tooltip("Local Z kickback applied per shot (bigger = more push back).")]
+    [Min(0f)] public float recoilKickback = 0.15f;
+
+    [Tooltip("Pitch-up degrees applied per shot.")]
+    [Min(0f)] public float recoilUp = 6f;
+
+    [Tooltip("How fast recoil returns to zero (higher = snappier).")]
+    [Min(0f)] public float recoilRecovery = 12f;
+
 #if UNITY_EDITOR
 private void OnValidate()
 {

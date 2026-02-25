@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Audio;
 
 public class StyleSwapTransitionFX : MonoBehaviour
 {
@@ -30,6 +31,15 @@ public class StyleSwapTransitionFX : MonoBehaviour
     [SerializeField] private float settleJitterPixels = 6f;
     [SerializeField] private float flashAlpha = 1f;
 
+    [Header("Transition SFX (own mixer group)")]
+    [SerializeField] private AudioSource transitionSource;
+
+    [SerializeField] private AudioClip modernToRetroClip;
+    [SerializeField] private AudioClip retroToModernClip;
+
+    [SerializeField, Range(0f, 1f)] private float transitionVolume01 = 1f;
+    [SerializeField] private Vector2 transitionPitchRange = new Vector2(0.98f, 1.02f);
+
     private bool isPlaying;
     public bool IsPlaying => isPlaying;
 
@@ -53,20 +63,31 @@ public class StyleSwapTransitionFX : MonoBehaviour
             enabled = false;
             return;
         }
+        if (transitionSource == null)
+            transitionSource = GetComponent<AudioSource>();
+
+        if (transitionSource != null)
+        {
+            transitionSource.playOnAwake = false;
+            transitionSource.loop = false;
+        }
+        else
+        {
+            Debug.LogWarning("[StyleSwapTransitionFX] No transitionSource set (transition SFX will be silent).", this);
+        }
 
         overlayRoot.SetActive(false);
     }
 
-    public void Play(Action onMidpoint, Action onComplete = null)
+    public void Play(StyleState targetStyle, Action onMidpoint, Action onComplete = null)
     {
-        // Prevent overlapping transitions.
         if (isPlaying)
             return;
 
-        StartCoroutine(PlayRoutine(onMidpoint, onComplete));
+        StartCoroutine(PlayRoutine(targetStyle, onMidpoint, onComplete));
     }
 
-    private IEnumerator PlayRoutine(Action onMidpoint, Action onComplete)
+    private IEnumerator PlayRoutine(StyleState targetStyle, Action onMidpoint, Action onComplete)
     {
         isPlaying = true;
 
@@ -75,6 +96,8 @@ public class StyleSwapTransitionFX : MonoBehaviour
 
         if (preSwapHoldRealtime > 0f)
             yield return new WaitForSecondsRealtime(preSwapHoldRealtime);
+
+        PlayTransitionSfx(targetStyle);
 
         // Pause registered gameplay systems (no Time.timeScale hack).
         pauseManager?.SetPaused(true);
@@ -173,4 +196,18 @@ public class StyleSwapTransitionFX : MonoBehaviour
 
         rt.anchoredPosition = Vector2.zero;
     }
+
+    private void PlayTransitionSfx(StyleState targetStyle)
+    {
+        if (transitionSource == null)
+            return;
+
+        AudioClip clip = targetStyle == StyleState.Retro ? modernToRetroClip : retroToModernClip;
+        if (clip == null)
+            return;
+
+        transitionSource.pitch = UnityEngine.Random.Range(transitionPitchRange.x, transitionPitchRange.y);
+        transitionSource.PlayOneShot(clip, transitionVolume01);
+    }
+
 }

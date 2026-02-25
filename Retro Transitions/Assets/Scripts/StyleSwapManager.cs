@@ -88,9 +88,10 @@ public class StyleSwapManager : MonoBehaviour
         pendingTarget = target;
 
         transitionFX.Play(
-            onMidpoint: () => { ApplyStyle(pendingTarget, reason); },
-            onComplete: () => { isTransitioning = false; }
-        );
+    pendingTarget,
+    onMidpoint: () => { ApplyStyle(pendingTarget, reason); },
+    onComplete: () => { isTransitioning = false; }
+);
     }
 
     public void ForceStyle(StyleState target, string reason = "Force")
@@ -111,9 +112,10 @@ public class StyleSwapManager : MonoBehaviour
         pendingTarget = target;
 
         transitionFX.Play(
-            onMidpoint: () => { ApplyStyle(pendingTarget, reason); },
-            onComplete: () => { isTransitioning = false; }
-        );
+    pendingTarget,
+    onMidpoint: () => { ApplyStyle(pendingTarget, reason); },
+    onComplete: () => { isTransitioning = false; }
+);
     }
 
     private void ApplyStyle(StyleState state, string reason)

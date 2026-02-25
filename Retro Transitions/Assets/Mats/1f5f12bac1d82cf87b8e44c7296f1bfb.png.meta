@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 2f9a7641590c90345a85b2ba6cf34f40
+guid: c0d869a63a312a54490b97c5404d9dcb
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -45,10 +45,10 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 1000
+  spritePixelsToUnits: 200
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -69,7 +69,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 256
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 0
@@ -123,13 +123,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Retro_MuzzleSprite_0
+      name: 1f5f12bac1d82cf87b8e44c7296f1bfb_0
       rect:
         serializedVersion: 2
-        x: 125
-        y: 19
-        width: 216
-        height: 216
+        x: 0
+        y: 0
+        width: 426
+        height: 240
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -138,8 +138,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8cf770d4aa446e349933f74337eab7a3
-      internalID: -165650476
+      spriteID: b36cc20bce0d3b0489425fc7ab51c1f9
+      internalID: -1207386727
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 3d9c6fd3bda408144a16c29a19479add
+    spriteID: 0c28ee882558a2d49b23a424c290e57d
     internalID: 0
     vertices: []
     indices: 
@@ -158,7 +158,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Retro_MuzzleSprite_0: -165650476
+      1f5f12bac1d82cf87b8e44c7296f1bfb_0: -1207386727
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

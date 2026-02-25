@@ -42,11 +42,12 @@ public class EnemyStyleSwapListener : MonoBehaviour
             if (retroVisual) retroRenderers = retroVisual.GetComponentsInChildren<Renderer>(true);
         }
 
+        // Keep anims ticking even when their renderers are hidden.
         if (modernAnimator) modernAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         if (retroAnimator) retroAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
         if (styleSwapManager == null)
-            styleSwapManager = Object.FindFirstObjectByType<StyleSwapManager>();
+            styleSwapManager = FindFirstObjectByType<StyleSwapManager>();
     }
 
     private void OnEnable()
@@ -56,7 +57,7 @@ public class EnemyStyleSwapListener : MonoBehaviour
         else
             Debug.LogWarning($"[{name}] styleSwapEvent not assigned.", this);
 
-        // Sync on enable so enemies spawning mid-game start in the correct style
+        // Spawned enemies start in correct style.
         if (styleSwapManager != null)
             OnStyleSwap(styleSwapManager.CurrentState);
     }
@@ -71,18 +72,21 @@ public class EnemyStyleSwapListener : MonoBehaviour
     {
         bool toModern = state == StyleState.Modern;
 
+        // Swap muzzle for ranged module.
         Transform selectedMuzzle = toModern ? muzzleModern : muzzleRetro;
         if (attack != null && selectedMuzzle != null)
             attack.SetMuzzle(selectedMuzzle);
         else if (verboseLogs && attack != null && selectedMuzzle == null)
-            Debug.LogWarning($"[{name}] Selected muzzle is null for state {state}.", this);
+            Debug.LogWarning($"[{name}] Selected muzzle is null for {state}.", this);
 
+        // Sync anims so the swap feels seamless.
         Animator fromA = toModern ? retroAnimator : modernAnimator;
         Animator toA = toModern ? modernAnimator : retroAnimator;
 
         if (syncParametersOnSwap && fromA != null && toA != null) CopyParameters(fromA, toA);
         if (syncStateTimeIfPossible && fromA != null && toA != null) TrySyncStateTime(fromA, toA);
 
+        // Toggle renderers (roots stay active).
         SetRenderersEnabled(modernRenderers, toModern);
         SetRenderersEnabled(retroRenderers, !toModern);
 
@@ -93,6 +97,7 @@ public class EnemyStyleSwapListener : MonoBehaviour
     private void SetRenderersEnabled(Renderer[] rends, bool enabled)
     {
         if (rends == null) return;
+
         for (int i = 0; i < rends.Length; i++)
             if (rends[i]) rends[i].enabled = enabled;
     }
@@ -108,12 +113,15 @@ public class EnemyStyleSwapListener : MonoBehaviour
             switch (p.type)
             {
                 case AnimatorControllerParameterType.Bool:
-                    toA.SetBool(p.nameHash, fromA.GetBool(p.nameHash)); break;
+                    toA.SetBool(p.nameHash, fromA.GetBool(p.nameHash));
+                    break;
                 case AnimatorControllerParameterType.Float:
-                    toA.SetFloat(p.nameHash, fromA.GetFloat(p.nameHash)); break;
+                    toA.SetFloat(p.nameHash, fromA.GetFloat(p.nameHash));
+                    break;
                 case AnimatorControllerParameterType.Int:
-                    toA.SetInteger(p.nameHash, fromA.GetInteger(p.nameHash)); break;
-                    // Triggers skipped intentionally - use bools for cross-style sync
+                    toA.SetInteger(p.nameHash, fromA.GetInteger(p.nameHash));
+                    break;
+                    // Triggers skipped intentionally (use bools for cross-style sync).
             }
         }
 
@@ -124,6 +132,7 @@ public class EnemyStyleSwapListener : MonoBehaviour
     {
         foreach (var p in a.parameters)
             if (p.nameHash == nameHash) return true;
+
         return false;
     }
 

@@ -10,7 +10,6 @@ public class GameAudioManager : MonoBehaviour
     [Header("Player SFX")]
     [Tooltip("One-shot source routed to PlayerSFX mixer group.")]
     [SerializeField] private AudioSource playerSfxSource;
-
     [SerializeField] private float playerSfxVolume = 1f;
 
     [Header("Mixer Snapshots")]
@@ -50,7 +49,6 @@ public class GameAudioManager : MonoBehaviour
 
         Vector2 pitchRange = cfg.gunshotPitch;
         playerSfxSource.pitch = Random.Range(pitchRange.x, pitchRange.y);
-
         playerSfxSource.PlayOneShot(cfg.gunshotClip, playerSfxVolume);
     }
 
@@ -88,5 +86,16 @@ public class GameAudioManager : MonoBehaviour
 
         playerSfxSource.pitch = Random.Range(pitchMin, pitchMax);
         playerSfxSource.PlayOneShot(clip, Mathf.Clamp01(volume01) * playerSfxVolume);
+    }
+
+    // Plays a one-shot on a provided AudioSource (keeps spatial + uses that source's mixer routing).
+    public void PlayOneShotOnSource(AudioSource source, AudioClip clip, float volume01 = 1f,
+        float pitchMin = 0.95f, float pitchMax = 1.05f)
+    {
+        if (source == null || clip == null)
+            return;
+
+        source.pitch = Random.Range(pitchMin, pitchMax);
+        source.PlayOneShot(clip, Mathf.Clamp01(volume01));
     }
 }

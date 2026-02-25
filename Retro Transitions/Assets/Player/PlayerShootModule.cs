@@ -7,10 +7,9 @@ public class PlayerShootModule : MonoBehaviour
     [SerializeField] private Transform muzzle;
     [SerializeField] private MuzzleFlashController muzzleFlash;
 
-    [Header("Audio")]
-    [SerializeField] private AudioSource audioSource;
-    [SerializeField] private AudioClip gunshotClip;
-    [SerializeField] private Vector2 pitchVariation = new Vector2(0.97f, 1.03f);
+    [Header("Refs")]
+    [SerializeField] private PlayerCombatController combatController;
+    [SerializeField] private GameAudioManager audioManager;
 
     [Header("Tuning")]
     [SerializeField] private float damage = 10f;
@@ -26,9 +25,6 @@ public class PlayerShootModule : MonoBehaviour
     private float fireLockTimer;
     private GameObject owner;
 
-    [SerializeField] private PlayerCombatController combatController;
-
-
     private void Awake()
     {
         owner = transform.root.gameObject;
@@ -37,22 +33,20 @@ public class PlayerShootModule : MonoBehaviour
             Debug.LogWarning($"{name}: playerCamera not assigned", this);
         if (muzzle == null && logWarnings)
             Debug.LogWarning($"{name}: muzzle not assigned", this);
-        if (audioSource == null && logWarnings)
-            Debug.LogWarning($"{name}: audioSource not assigned", this);
+        if (combatController == null && logWarnings)
+            Debug.LogWarning($"{name}: combatController not assigned", this);
+        if (audioManager == null && logWarnings)
+            Debug.LogWarning($"{name}: audioManager not assigned", this);
     }
 
     private void OnEnable()
     {
-        // Always start with a clean lock — if this module was disabled mid-cooldown
-        // (e.g. on a style swap) we don't want to inherit a stale lock from the
-        // previous session. PlayerCombatController owns the authoritative cooldown.
+        // Reset local lock if this module gets disabled/enabled on style swap.
         fireLockTimer = 0f;
     }
 
     private void OnDisable()
     {
-        // Belt-and-suspenders: clear on disable too so there's no stale state
-        // if the module is re-enabled before the coroutine cache runs.
         fireLockTimer = 0f;
     }
 
@@ -62,10 +56,7 @@ public class PlayerShootModule : MonoBehaviour
             fireLockTimer -= Time.deltaTime;
     }
 
-    
-
     public void SetDamage(float newDamage) => damage = Mathf.Max(0f, newDamage);
-    public void SetMuzzleFlash(MuzzleFlashController newFlash) { if (newFlash != null) muzzleFlash = newFlash; }
 
     public bool TryBeginFire(float lockDuration)
     {
@@ -76,18 +67,16 @@ public class PlayerShootModule : MonoBehaviour
         return true;
     }
 
-
     private void FireProjectileInternal(AmmoTypeConfig cfg)
     {
-        if (playerCamera == null) return;
+        if (playerCamera == null || cfg == null)
+            return;
 
+        // VFX (config + global style handled inside controller)
         muzzleFlash?.Play(cfg);
 
-        if (audioSource != null && gunshotClip != null)
-        {
-            audioSource.pitch = Random.Range(pitchVariation.x, pitchVariation.y);
-            audioSource.PlayOneShot(gunshotClip);
-        }
+        // SFX (per ammo type clip handled by audio manager)
+        audioManager?.PlayGunshot(cfg);
 
         Vector3 origin = playerCamera.transform.position;
         Vector3 direction = playerCamera.transform.forward;
@@ -106,9 +95,12 @@ public class PlayerShootModule : MonoBehaviour
         }
     }
 
+    // Animation Event calls this (no params)
     public void FireProjectile()
     {
-        if (combatController == null) return;
+        if (combatController == null)
+            return;
+
         FireProjectileInternal(combatController.CurrentConfig);
     }
 }

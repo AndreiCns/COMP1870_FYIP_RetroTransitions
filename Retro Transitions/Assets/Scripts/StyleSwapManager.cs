@@ -7,6 +7,10 @@ public class StyleSwapManager : MonoBehaviour
     [Header("Config")]
     [SerializeField] private StyleSwapEvent styleSwapEvent;
 
+    [Header("Audio")]
+    [Tooltip("Optional explicit reference. If not set, will try to find one in scene.")]
+    [SerializeField] private GameAudioManager gameAudio;
+
     [Header("Debug Input (optional)")]
     [SerializeField] private InputActionReference toggleStyleAction;
 
@@ -19,14 +23,11 @@ public class StyleSwapManager : MonoBehaviour
     private StyleState currentState = StyleState.Modern;
     public StyleState CurrentState => currentState;
 
-    private GameAudioManager gameAudio;
-
     private bool isTransitioning;
     private StyleState pendingTarget;
 
     private void Awake()
     {
-        // Required for the system to function.
         if (styleSwapEvent == null)
         {
             Debug.LogError("[StyleSwapManager] styleSwapEvent is NULL.", this);
@@ -34,17 +35,16 @@ public class StyleSwapManager : MonoBehaviour
             return;
         }
 
-        // Central style brain; audio reacts to state.
-        gameAudio = FindFirstObjectByType<GameAudioManager>();
+        // Best: assign in inspector. Fallback: find.
+        if (gameAudio == null)
+            gameAudio = FindFirstObjectByType<GameAudioManager>();
     }
 
     private void OnEnable()
     {
-        // Optional hotkey for fast iteration.
         if (toggleStyleAction != null)
             toggleStyleAction.action.performed += OnTogglePressed;
 
-        // Delay one frame so listeners are ready.
         StartCoroutine(RaiseInitialStyleNextFrame());
     }
 
@@ -62,13 +62,11 @@ public class StyleSwapManager : MonoBehaviour
 
     private void OnTogglePressed(InputAction.CallbackContext ctx)
     {
-        // Debug-only toggle.
         RequestStyleSwap("Toggle");
     }
 
     public void RequestStyleSwap(string reason)
     {
-        // Prevent re-entry while transition is playing.
         if (isTransitioning)
             return;
 
@@ -80,7 +78,6 @@ public class StyleSwapManager : MonoBehaviour
             ? StyleState.Retro
             : StyleState.Modern;
 
-        // No FX assigned - swap instantly.
         if (transitionFX == null || reason == "Initial")
         {
             ApplyStyle(target, reason);
@@ -91,25 +88,16 @@ public class StyleSwapManager : MonoBehaviour
         pendingTarget = target;
 
         transitionFX.Play(
-            onMidpoint: () =>
-            {
-                // Commit state only at transition midpoint.
-                ApplyStyle(pendingTarget, reason);
-            },
-            onComplete: () =>
-            {
-                isTransitioning = false;
-            }
+            onMidpoint: () => { ApplyStyle(pendingTarget, reason); },
+            onComplete: () => { isTransitioning = false; }
         );
     }
 
     public void ForceStyle(StyleState target, string reason = "Force")
     {
-        // Ignore if already transitioning.
         if (isTransitioning)
             return;
 
-        // Ignore redundant requests.
         if (currentState == target)
             return;
 
@@ -123,14 +111,8 @@ public class StyleSwapManager : MonoBehaviour
         pendingTarget = target;
 
         transitionFX.Play(
-            onMidpoint: () =>
-            {
-                ApplyStyle(pendingTarget, reason);
-            },
-            onComplete: () =>
-            {
-                isTransitioning = false;
-            }
+            onMidpoint: () => { ApplyStyle(pendingTarget, reason); },
+            onComplete: () => { isTransitioning = false; }
         );
     }
 
@@ -141,10 +123,8 @@ public class StyleSwapManager : MonoBehaviour
         if (verboseLogs)
             Debug.Log($"[StyleSwapManager] {reason} -> {currentState}");
 
-        // Broadcast to visual/audio listeners.
         styleSwapEvent.Raise(currentState);
 
-        // Audio mirrors visual state.
         if (gameAudio != null)
         {
             if (currentState == StyleState.Modern)

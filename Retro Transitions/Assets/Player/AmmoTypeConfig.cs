@@ -26,6 +26,10 @@ public class AmmoTypeConfig : ScriptableObject
     [Tooltip("If false, cooldown smoke won't play for this ammo type.")]
     public bool enableCooldownSmoke = true;
 
+    [Header("SFX")]
+    public AudioClip gunshotClip;
+    public Vector2 gunshotPitch = new Vector2(0.97f, 1.03f);
+
 #if UNITY_EDITOR
 private void OnValidate()
 {

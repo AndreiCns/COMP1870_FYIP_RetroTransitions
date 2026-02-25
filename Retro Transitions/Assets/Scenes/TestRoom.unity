@@ -2039,17 +2039,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7377593bbb8356d40a165f4bcbdf3281, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1578430429 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2908932743801730368, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
+--- !u!82 &1578430434 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 4292444458556407963, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
   m_PrefabInstance: {fileID: 5403182006653861122}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 32053a687f846dc429010eea603ab852, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1590100997 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5243906413084295469, guid: a96ff71976f5b2944bafa939e9bc0c30, type: 3}
@@ -2338,6 +2332,17 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+--- !u!114 &1857005471 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2261423269289914715, guid: f54dea1b3fe0b5246916c77eaf87b4f4, type: 3}
+  m_PrefabInstance: {fileID: 3938542134819199041}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 946aab547d635ef4984590254bfa308e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1857005474 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6700546687668548699, guid: f54dea1b3fe0b5246916c77eaf87b4f4, type: 3}
@@ -3957,6 +3962,10 @@ PrefabInstance:
       propertyPath: tutorialPanel
       value: 
       objectReference: {fileID: 652076782}
+    - target: {fileID: 2261423269289914715, guid: f54dea1b3fe0b5246916c77eaf87b4f4, type: 3}
+      propertyPath: playerSfxSource
+      value: 
+      objectReference: {fileID: 1578430434}
     - target: {fileID: 2285118613671170146, guid: f54dea1b3fe0b5246916c77eaf87b4f4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 36.15878
@@ -3997,6 +4006,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6700546687668548699, guid: f54dea1b3fe0b5246916c77eaf87b4f4, type: 3}
+      propertyPath: gameAudio
+      value: 
+      objectReference: {fileID: 1857005471}
     - target: {fileID: 6700546687668548699, guid: f54dea1b3fe0b5246916c77eaf87b4f4, type: 3}
       propertyPath: transitionFX
       value: 
@@ -4252,6 +4265,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1541105045105099670, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
+      propertyPath: audioManager
+      value: 
+      objectReference: {fileID: 1857005471}
     - target: {fileID: 1693364570441993171, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
       propertyPath: styleSwapManager
       value: 
@@ -4272,14 +4289,18 @@ PrefabInstance:
       propertyPath: styleSwapManager
       value: 
       objectReference: {fileID: 1857005474}
+    - target: {fileID: 4292444458556407963, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 101622701671323166, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
     - target: {fileID: 5035748561986375114, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 6509515965169092163, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
-      propertyPath: combatController
+      propertyPath: audioManager
       value: 
-      objectReference: {fileID: 1578430429}
+      objectReference: {fileID: 1857005471}
     - target: {fileID: 7071837769040399632, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
       propertyPath: m_LocalPosition.x
       value: 36.12
@@ -4321,9 +4342,9 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8106269300243505974, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
-      propertyPath: combatController
+      propertyPath: audioManager
       value: 
-      objectReference: {fileID: 1578430429}
+      objectReference: {fileID: 1857005471}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

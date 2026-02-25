@@ -12,22 +12,19 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private Transform weaponRecoil;
     [SerializeField] private PlayerCombatController combat;
 
+    [Header("Audio")]
+    [Tooltip("Centralised audio brain (routes through mixer + snapshots).")]
+    [SerializeField] private GameAudioManager audioManager;
+
     [Header("Movement SFX")]
-    [SerializeField] private AudioSource movementSfxSource;
     [SerializeField] private AudioClip[] footstepClips;
     [SerializeField] private float stepInterval = 0.5f;
 
-    [Header("Jump & Landing Audio")]
+    [Header("Jump & Landing SFX")]
     [SerializeField] private AudioClip jumpClip;
     [SerializeField] private AudioClip landingClip;
     [SerializeField] private float jumpVolume = 1f;
     [SerializeField] private float landingVolume = 1f;
-
-    [Header("Retro Audio")]
-    [SerializeField] private AudioLowPassFilter movementLowPass;
-    [SerializeField] private StyleSwapEvent styleSwapEvent;
-    [SerializeField] private float retroCutoff = 1200f;
-    [SerializeField] private float retroResonanceQ = 1.1f;
 
     [Header("Debug")]
     [SerializeField] private bool verboseLogs = false;
@@ -87,46 +84,21 @@ public class FirstPersonController : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
 
-        // Movement SFX is critical for feedback; fail early if it's missing.
-        if (movementSfxSource == null)
-        {
-            Debug.LogError("[FPC] movementSfxSource not assigned.", this);
-            enabled = false;
-            return;
-        }
+        // Audio manager is optional for edit-time, but expected at runtime.
+        if (audioManager == null)
+            audioManager = FindFirstObjectByType<GameAudioManager>();
 
-        // Keep the low-pass on the movement source so retro mode is a simple toggle.
-        if (movementLowPass == null)
-            movementLowPass = movementSfxSource.GetComponent<AudioLowPassFilter>();
-
-        if (movementLowPass == null)
-            movementLowPass = movementSfxSource.gameObject.AddComponent<AudioLowPassFilter>();
+        if (audioManager == null && verboseLogs)
+            Debug.LogWarning("[FPC] GameAudioManager not found. Movement SFX will be silent.", this);
 
         // Combat is optional at edit-time, but the controller expects it at runtime.
         if (combat == null)
             combat = GetComponent<PlayerCombatController>();
     }
 
-    private void OnEnable()
-    {
-        if (styleSwapEvent != null)
-            styleSwapEvent.OnStyleSwap += OnStyleChanged;
-        else
-            Debug.LogWarning("[FPC] styleSwapEvent not assigned.", this);
-
-        if (verboseLogs)
-            Debug.Log($"[FPC] movementSfxSource={movementSfxSource.name}, lowPass={(movementLowPass ? "OK" : "NULL")}", this);
-    }
-
-    private void OnDisable()
-    {
-        if (styleSwapEvent != null)
-            styleSwapEvent.OnStyleSwap -= OnStyleChanged;
-    }
-
     private void Start()
     {
-        // These are hard requirements; better to disable than chase nulls mid-playtest.
+        // Hard requirements; better to disable than chase nulls mid-playtest.
         if (cam == null || playerCamera == null || weaponHolder == null || weaponRecoil == null)
         {
             Debug.LogError($"[FPC] Missing required references on '{gameObject.name}'.", this);
@@ -140,9 +112,6 @@ public class FirstPersonController : MonoBehaviour
         // FPS feel: lock cursor by default.
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        // Start in modern unless style system tells us otherwise.
-        ApplyMovementFilter(isRetro: false);
     }
 
     // InputSystem callbacks
@@ -194,7 +163,6 @@ public class FirstPersonController : MonoBehaviour
         if (!ctx.performed) return;
         combat?.TrySetAmmoType(AmmoType.Plasma);
     }
-
 
     private void Update()
     {
@@ -285,16 +253,16 @@ public class FirstPersonController : MonoBehaviour
     {
         if (jumpClip == null) return;
 
-        movementSfxSource.pitch = Random.Range(0.95f, 1.05f);
-        movementSfxSource.PlayOneShot(jumpClip, jumpVolume);
+        // Centralised playback (mixer snapshots handle retro globally).
+        audioManager?.PlayJump(jumpClip, jumpVolume);
     }
 
     private void PlayLandingSFX()
     {
         if (landingClip == null) return;
 
-        movementSfxSource.pitch = Random.Range(0.9f, 1.0f);
-        movementSfxSource.PlayOneShot(landingClip, landingVolume);
+        // Centralised playback (mixer snapshots handle retro globally).
+        audioManager?.PlayLanding(landingClip, landingVolume);
     }
 
     private void HandleFootsteps(float dt, float moveAmount)
@@ -319,8 +287,9 @@ public class FirstPersonController : MonoBehaviour
         if (footstepClips == null || footstepClips.Length == 0) return;
 
         int index = Random.Range(0, footstepClips.Length);
-        movementSfxSource.pitch = Random.Range(0.95f, 1.05f);
-        movementSfxSource.PlayOneShot(footstepClips[index], 1f);
+
+        // Centralised playback (mixer snapshots handle retro globally).
+        audioManager?.PlayFootstep(footstepClips[index], 1f);
     }
 
     private IEnumerator FOVKick()
@@ -380,27 +349,6 @@ public class FirstPersonController : MonoBehaviour
     {
         // Keeps the weapon orientation locked to the camera even during character rotation.
         weaponHolder.rotation = playerCamera.rotation;
-    }
-
-    private void OnStyleChanged(StyleState newState)
-    {
-        if (verboseLogs)
-            Debug.Log($"[FPC] Style -> {newState}", this);
-
-        ApplyMovementFilter(newState == StyleState.Retro);
-    }
-
-    private void ApplyMovementFilter(bool isRetro)
-    {
-        if (movementLowPass == null) return;
-
-        movementLowPass.enabled = isRetro;
-
-        if (isRetro)
-        {
-            movementLowPass.cutoffFrequency = retroCutoff;
-            movementLowPass.lowpassResonanceQ = retroResonanceQ;
-        }
     }
 
     private void TryInteract()

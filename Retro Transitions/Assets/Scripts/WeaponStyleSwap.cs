@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class WeaponStyleSwap : MonoBehaviour
@@ -6,23 +7,25 @@ public class WeaponStyleSwap : MonoBehaviour
     [SerializeField] private GameObject modernWeapon;
     [SerializeField] private GameObject retroWeapon;
 
-    [Header("Listen to")]
+    [Header("Listen To")]
     [SerializeField] private StyleSwapEvent styleSwapEvent;
+
+    // Raised after SetActive calls are done so other listeners (e.g.
+    // PlayerCombatController) can safely check isActiveAndEnabled.
+    public event Action<StyleState> OnWeaponsSwapped;
 
     private Animator modernAnim;
     private Animator retroAnim;
-
-    // Cached state so we don’t check enum repeatedly.
     private bool isRetroActive;
 
     private static readonly int FireHash = Animator.StringToHash("Fire");
 
+   
+
     private void Awake()
     {
-        // Cache animators once – no runtime GetComponent calls.
         if (modernWeapon != null)
             modernAnim = modernWeapon.GetComponentInChildren<Animator>();
-
         if (retroWeapon != null)
             retroAnim = retroWeapon.GetComponentInChildren<Animator>();
     }
@@ -39,29 +42,31 @@ public class WeaponStyleSwap : MonoBehaviour
             styleSwapEvent.OnStyleSwap -= OnStyleChanged;
     }
 
-    private void OnStyleChanged(StyleState newState)
-    {
-        // This class only handles visuals. No gameplay logic here.
-        isRetroActive = newState == StyleState.Retro;
-
-        if (modernWeapon != null)
-            modernWeapon.SetActive(!isRetroActive);
-
-        if (retroWeapon != null)
-            retroWeapon.SetActive(isRetroActive);
-    }
+    
 
     public void Fire()
     {
-        // Choose the currently visible weapon animator.
         Animator a = isRetroActive ? retroAnim : modernAnim;
         if (a == null) return;
 
-        // Guard against accidental re-trigger spam while already in fire state.
         if (a.GetCurrentAnimatorStateInfo(0).IsName("shoot_001"))
             return;
 
         a.ResetTrigger(FireHash);
         a.SetTrigger(FireHash);
+    }
+
+    
+
+    private void OnStyleChanged(StyleState newState)
+    {
+        isRetroActive = newState == StyleState.Retro;
+
+        // Activate/deactivate first...
+        if (modernWeapon != null) modernWeapon.SetActive(!isRetroActive);
+        if (retroWeapon != null) retroWeapon.SetActive(isRetroActive);
+
+        // ...then notify dependents that GameObjects are in their final state.
+        OnWeaponsSwapped?.Invoke(newState);
     }
 }

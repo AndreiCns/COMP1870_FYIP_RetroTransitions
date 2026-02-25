@@ -4,6 +4,7 @@ public class RetroSmokeEmitter : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private PlayerCombatController combatController;
+    [SerializeField] private StyleSwapEvent styleSwapEvent;
     [SerializeField] private StyleSwapManager styleSwapManager;
 
     [Header("Spawn")]
@@ -14,7 +15,6 @@ public class RetroSmokeEmitter : MonoBehaviour
     [Header("Timing")]
     [Tooltip("Small delay so smoke doesn't pop instantly.")]
     [SerializeField] private float startDelay = 0.03f;
-
     [Tooltip("When cooldown remaining is below this, taper off smoke.")]
     [SerializeField] private float endFadeWindow = 0.12f;
 
@@ -32,9 +32,9 @@ public class RetroSmokeEmitter : MonoBehaviour
 
     private Vector3 lastAnchorPos;
     private Vector3 anchorVelocity;
-
     private float spawnTimer;
     private float currentCooldownStart = -1f;
+    private bool isRetro;
 
     private void Awake()
     {
@@ -48,14 +48,15 @@ public class RetroSmokeEmitter : MonoBehaviour
             return;
         }
 
-        if (styleSwapManager == null)
-            Debug.LogWarning($"{name}: styleSwapManager not assigned (retro gating will fail).", this);
-
         if (puffPrefab == null)
         {
             Debug.LogError($"{name}: Missing puffPrefab reference.", this);
             enabled = false;
+            return;
         }
+
+        if (styleSwapManager == null)
+            styleSwapManager = Object.FindFirstObjectByType<StyleSwapManager>();
 
         if (followAnchor == null)
             followAnchor = transform;
@@ -63,17 +64,38 @@ public class RetroSmokeEmitter : MonoBehaviour
         lastAnchorPos = followAnchor.position;
     }
 
+    private void OnEnable()
+    {
+        if (styleSwapEvent != null)
+            styleSwapEvent.OnStyleSwap += OnStyleChanged;
+        else
+            Debug.LogWarning($"{name}: styleSwapEvent not assigned.", this);
+
+        // Sync current state so isRetro is correct from the first frame
+        if (styleSwapManager != null)
+            OnStyleChanged(styleSwapManager.CurrentState);
+    }
+
+    private void OnDisable()
+    {
+        if (styleSwapEvent != null)
+            styleSwapEvent.OnStyleSwap -= OnStyleChanged;
+    }
+
+    private void OnStyleChanged(StyleState state)
+    {
+        isRetro = state == StyleState.Retro;
+        if (!isRetro) currentCooldownStart = -1f;
+    }
+
     private void Update()
     {
-        // Track recoil motion so puffs inherit the gun's kick.
         float dt = Mathf.Max(Time.deltaTime, 0.0001f);
+
         anchorVelocity = (followAnchor.position - lastAnchorPos) / dt;
         lastAnchorPos = followAnchor.position;
 
-        if (styleSwapManager == null || styleSwapManager.CurrentState != StyleState.Retro)
-            return;
-
-        if (!combatController.IsOnCooldown)
+        if (!isRetro || !combatController.IsOnCooldown)
         {
             currentCooldownStart = -1f;
             return;
@@ -85,22 +107,17 @@ public class RetroSmokeEmitter : MonoBehaviour
             currentCooldownStart = remaining;
 
         float elapsed = currentCooldownStart - remaining;
-        if (elapsed < startDelay)
-            return;
+        if (elapsed < startDelay) return;
 
-        if (transform.childCount >= maxAlivePuffs)
-            return;
+        if (transform.childCount >= maxAlivePuffs) return;
 
         float intensity01 = GetIntensity01(remaining, currentCooldownStart);
         float targetInterval = Mathf.Lerp(minSpawnInterval, maxSpawnInterval, intensity01);
 
         spawnTimer -= Time.deltaTime;
-
-        if (spawnTimer > 0f)
-            return;
+        if (spawnTimer > 0f) return;
 
         spawnTimer = Mathf.Max(0.02f, targetInterval);
-
         SpawnPuff(intensity01);
     }
 
@@ -129,8 +146,6 @@ public class RetroSmokeEmitter : MonoBehaviour
         float scale = Random.Range(sx, sy);
 
         puff.transform.localScale *= scale;
-
-        // Small inherited kick so it doesn't "spawn in the middle" during recoil.
         puff.AddVelocity(anchorVelocity * inheritStrength);
     }
 }

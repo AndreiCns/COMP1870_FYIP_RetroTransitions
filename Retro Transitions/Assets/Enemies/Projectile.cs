@@ -6,7 +6,6 @@ public class Projectile : MonoBehaviour
     [SerializeField] private float lifeTime = 4f;
     [SerializeField] private LayerMask hitMask = ~0;
 
-    // Runtime values set on spawn
     private Vector3 dir = Vector3.forward;
     private float speed = 0f;
     private float damage = 0f;
@@ -17,7 +16,6 @@ public class Projectile : MonoBehaviour
 
     public void Init(Vector3 direction, float newSpeed, float newDamage, GameObject newSource)
     {
-        // Clamp inputs so bad values don’t cause weird behaviour
         dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
         speed = Mathf.Max(0f, newSpeed);
         damage = Mathf.Max(0f, newDamage);
@@ -29,27 +27,30 @@ public class Projectile : MonoBehaviour
 
     private void OnEnable()
     {
-        // Reset in case this is reused later (e.g. pooling)
+        // Full reset so pooled instances start clean. Init() must be called after this.
         isInitialised = false;
         remainingLife = Mathf.Max(0.01f, lifeTime);
+        dir = Vector3.forward;
+        speed = 0f;
+        damage = 0f;
+        source = null;
     }
 
     private void Update()
     {
         float dt = Time.deltaTime;
 
-        // Kill after lifetime expires
-        remainingLife -= dt;
-        if (remainingLife <= 0f)
+        // Check before lifetime so a pooled projectile that missed Init() fails immediately
+        if (!isInitialised)
         {
+            Debug.LogWarning($"Projectile '{name}' was never initialised.");
             Destroy(gameObject);
             return;
         }
 
-        // If Init was never called, don’t let it exist
-        if (!isInitialised)
+        remainingLife -= dt;
+        if (remainingLife <= 0f)
         {
-            Debug.LogWarning($"Projectile '{name}' was never initialised.");
             Destroy(gameObject);
             return;
         }
@@ -60,11 +61,9 @@ public class Projectile : MonoBehaviour
 
         if (dist <= 0.0001f) return;
 
-        // Raycast per step to avoid tunnelling
         if (Physics.Raycast(start, dir, out RaycastHit hit, dist, hitMask, QueryTriggerInteraction.Ignore))
         {
             transform.position = hit.point;
-
             TryApplyDamage(hit);
             Destroy(gameObject);
             return;
@@ -76,19 +75,10 @@ public class Projectile : MonoBehaviour
     private void TryApplyDamage(RaycastHit hit)
     {
         if (hit.collider == null) return;
-
-        // Ignore hits on the shooter
         if (source != null && hit.collider.transform.IsChildOf(source.transform)) return;
         if (damage <= 0f) return;
 
         if (hit.collider.TryGetComponent(out IDamageable dmg))
-        {
-            dmg.TakeDamage(damage, new DamageInfo
-            {
-                Point = hit.point,
-                Direction = dir,
-                Source = source
-            });
-        }
+            dmg.TakeDamage(damage, new DamageInfo { Point = hit.point, Direction = dir, Source = source });
     }
 }

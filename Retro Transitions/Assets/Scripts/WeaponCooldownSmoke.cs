@@ -5,6 +5,7 @@ public class WeaponCooldownSmoke : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private PlayerCombatController combatController;
     [SerializeField] private StyleSwapEvent styleSwapEvent;
+    [SerializeField] private StyleSwapManager styleSwapManager;
 
     [Header("Smoke Roots")]
     [SerializeField] private GameObject modernSmokeRoot;
@@ -14,7 +15,6 @@ public class WeaponCooldownSmoke : MonoBehaviour
     [SerializeField] private ParticleSystem modernSmokePS;
     [SerializeField] private float modernMaxRate = 25f;
     [SerializeField] private float modernMinRate = 0f;
-
     [Tooltip("Higher = tighter mid-peak")]
     [SerializeField] private float fadePower = 2.5f;
 
@@ -39,11 +39,13 @@ public class WeaponCooldownSmoke : MonoBehaviour
             return;
         }
 
+        if (styleSwapManager == null)
+            styleSwapManager = Object.FindFirstObjectByType<StyleSwapManager>();
+
         if (modernSmokePS != null)
         {
             modernEmission = modernSmokePS.emission;
             modernMain = modernSmokePS.main;
-
             modernMain.loop = true;
             modernEmission.enabled = true;
         }
@@ -56,6 +58,10 @@ public class WeaponCooldownSmoke : MonoBehaviour
     {
         if (styleSwapEvent != null)
             styleSwapEvent.OnStyleSwap += OnStyleChanged;
+
+        // Sync so enabling mid-session in retro mode drives the correct root
+        if (styleSwapManager != null)
+            OnStyleChanged(styleSwapManager.CurrentState);
     }
 
     private void OnDisable()
@@ -84,18 +90,10 @@ public class WeaponCooldownSmoke : MonoBehaviour
 
         if (wantModern)
         {
-            // Cooldown01 is 1 at start, 0 at end.
             float t = combatController.Cooldown01;
-
-            // Progress is 0 -> 1 across cooldown.
             float p = 1f - t;
-
-            // Bell curve: 0 at start/end, 1 in the middle.
             float bell = Mathf.Sin(p * Mathf.PI);
-
-            // Shape the peak (higher = sharper mid spike).
             float intensity = Mathf.Pow(bell, fadePower);
-
             ApplyModernIntensity(intensity);
         }
         else
@@ -107,27 +105,21 @@ public class WeaponCooldownSmoke : MonoBehaviour
     private void OnStyleChanged(StyleState newState)
     {
         currentStyle = newState;
-
-        // Prevent overlap flicker mid cooldown.
         SetSmokeActive(false, false);
         ApplyModernIntensity(0f);
     }
 
     private void ApplyModernIntensity(float intensity01)
     {
-        if (modernSmokePS == null)
-            return;
+        if (modernSmokePS == null) return;
 
-        // Emission follows intensity.
         float rate = Mathf.Lerp(modernMinRate, modernMaxRate, intensity01);
         modernEmission.rateOverTime = rate;
 
-        // Alpha follows intensity.
         Color c = modernMain.startColor.color;
         c.a = intensity01;
         modernMain.startColor = c;
 
-        // Size follows intensity (keeps it thin at start/end).
         float size = Mathf.Lerp(modernMinSize, modernMaxSize, intensity01);
         modernMain.startSize = size;
 

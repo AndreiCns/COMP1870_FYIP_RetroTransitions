@@ -3,29 +3,47 @@ using UnityEngine;
 public class BillboardFaceCamera : MonoBehaviour
 {
     [SerializeField] private Camera targetCamera;
-    [SerializeField] private bool lockY = true; // keep upright (useful for sprites)
+    [SerializeField] private bool lockY = true;
 
     private RangedAttackModule attackModule;
 
     private void Awake()
     {
-        // Cached in case the billboard needs attack context later
         attackModule = GetComponentInParent<RangedAttackModule>();
     }
 
-    void LateUpdate()
+    private void OnEnable()
     {
-        // Fallback if no camera assigned in inspector
-        if (targetCamera == null) targetCamera = Camera.main;
-        if (targetCamera == null) return;
+        // Re-resolve on each enable to handle camera changes between cycles
+        targetCamera = ResolveCamera();
+    }
+
+    private void LateUpdate()
+    {
+        // Lazy retry if camera wasn't ready at OnEnable
+        if (targetCamera == null)
+        {
+            targetCamera = ResolveCamera();
+            if (targetCamera == null) return;
+        }
 
         Vector3 toCam = transform.position - targetCamera.transform.position;
 
-        // Prevent vertical tilting for classic sprite look
         if (lockY) toCam.y = 0f;
-
         if (toCam.sqrMagnitude < 0.0001f) return;
 
         transform.rotation = Quaternion.LookRotation(toCam);
+    }
+
+    private static Camera ResolveCamera()
+    {
+        if (Camera.main != null) return Camera.main;
+
+        Camera[] cams = Camera.allCameras;
+        for (int i = 0; i < cams.Length; i++)
+            if (cams[i] != null && cams[i].enabled)
+                return cams[i];
+
+        return null;
     }
 }

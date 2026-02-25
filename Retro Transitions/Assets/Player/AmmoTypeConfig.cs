@@ -13,11 +13,10 @@ public class AmmoTypeConfig : ScriptableObject
     [Min(0.01f)] public float fireCooldown = 0.2f;
 
     [Header("Muzzle VFX")]
-    [Tooltip("Optional override if you want a unique muzzle flash per ammo type.")]
-    public MuzzleFlashController modernMuzzleFlashOverride;
+    [Tooltip("One flash controller per ammo type. It self-manages modern vs retro internally.")]
+    public MuzzleFlashController muzzleFlash;
 
-    [Tooltip("Optional override if you want a unique muzzle flash per ammo type.")]
-    public MuzzleFlashController retroMuzzleFlashOverride;
+    public MuzzleFlashController GetMuzzleFlash() => muzzleFlash;
 
     [Header("UI (optional)")]
     public string uiLabel = "BULL";

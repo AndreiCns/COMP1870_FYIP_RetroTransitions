@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerCombatController : MonoBehaviour
@@ -5,13 +6,16 @@ public class PlayerCombatController : MonoBehaviour
     [Header("References")]
     [SerializeField] private PlayerCombatState combatState;
     [SerializeField] private WeaponStyleSwap weaponStyleSwap;
+    [SerializeField] private StyleSwapManager styleSwapManager;
 
     [Header("Shoot Modules")]
     [SerializeField] private PlayerShootModule modernShoot;
     [SerializeField] private PlayerShootModule retroShoot;
 
     [Header("Ammo Type Configs")]
-    [SerializeField] private AmmoTypeConfig[] ammoTypeConfigs = new AmmoTypeConfig[4];
+    // Array size now driven by AmmoTypeCount — adding a new AmmoType
+    // is the only change needed; no magic numbers to hunt down.
+    [SerializeField] private AmmoTypeConfig[] ammoTypeConfigs = new AmmoTypeConfig[PlayerCombatState.AmmoTypeCount];
 
     [Header("Style")]
     [SerializeField] private StyleSwapEvent styleSwapEvent;
@@ -19,26 +23,29 @@ public class PlayerCombatController : MonoBehaviour
     [Header("Tuning")]
     [SerializeField] private int ammoPerShot = 1;
 
-    [Header("Debug")]
-    [SerializeField] private bool verboseLogs = false;
 
     public AmmoType CurrentAmmoType => combatState != null ? combatState.CurrentAmmoType : AmmoType.Bullet;
-
-
-    private float fireTimer;
-    private float lastShotCooldown = 0.01f; // used to normalize cooldown
-    private StyleState currentStyle = StyleState.Modern;
-
     public bool IsOnCooldown => fireTimer > 0f;
     public float CooldownRemaining => Mathf.Max(0f, fireTimer);
-
-    // 1 at shot start, 0 when ready again
     public float Cooldown01 => Mathf.Clamp01(fireTimer / lastShotCooldown);
 
-    private PlayerShootModule ActiveShoot =>
-        (modernShoot != null && modernShoot.gameObject.activeInHierarchy) ? modernShoot :
-        (retroShoot != null && retroShoot.gameObject.activeInHierarchy) ? retroShoot :
-        null;
+    public AmmoTypeConfig CurrentConfig => combatState != null ? GetConfig(combatState.CurrentAmmoType) : null;
+
+    public bool ShouldPlayCooldownSmoke
+    {
+        get
+        {
+            AmmoTypeConfig cfg = CurrentConfig;
+            return cfg == null || cfg.enableCooldownSmoke;
+        }
+    }
+
+    
+    private float fireTimer;
+    private float lastShotCooldown = 0.01f;
+    private PlayerShootModule activeShoot;
+    private Coroutine cacheRoutine;
+
 
     private void Awake()
     {
@@ -49,7 +56,6 @@ public class PlayerCombatController : MonoBehaviour
         {
             Debug.LogError("[Combat] PlayerCombatState missing.", this);
             enabled = false;
-            return;
         }
     }
 
@@ -57,101 +63,88 @@ public class PlayerCombatController : MonoBehaviour
     {
         if (styleSwapEvent != null)
             styleSwapEvent.OnStyleSwap += OnStyleChanged;
+
+        ScheduleCacheActiveShoot();
     }
 
     private void OnDisable()
     {
         if (styleSwapEvent != null)
             styleSwapEvent.OnStyleSwap -= OnStyleChanged;
+
+        if (cacheRoutine != null)
+        {
+            StopCoroutine(cacheRoutine);
+            cacheRoutine = null;
+        }
     }
 
     private void Update()
     {
-        // Cooldown is authoritative here (prevents input spam bypassing ROF).
         if (fireTimer > 0f)
             fireTimer -= Time.deltaTime;
     }
 
+    
+
     public bool TryFire()
     {
-        if (fireTimer > 0f)
+        if (fireTimer > 0f || activeShoot == null)
             return false;
 
-        var shoot = ActiveShoot;
-        if (shoot == null)
-            return false;
-
-        AmmoType type = combatState.CurrentAmmoType;
-        AmmoTypeConfig cfg = GetConfig(type);
-
+        AmmoTypeConfig cfg = GetConfig(combatState.CurrentAmmoType);
         if (cfg == null)
             return false;
 
-        if (!shoot.TryBeginFire(cfg.fireCooldown))
+        if (!activeShoot.TryBeginFire(cfg.fireCooldown))
             return false;
 
         if (!combatState.TryConsumeAmmo(ammoPerShot))
             return false;
 
-        shoot.SetDamage(cfg.damage);
+        activeShoot.SetDamage(cfg.damage);
 
-        MuzzleFlashController flashOverride = GetMuzzleOverride(cfg);
-        if (flashOverride != null)
-            shoot.SetMuzzleFlash(flashOverride);
+        MuzzleFlashController flash = cfg.GetMuzzleFlash();
+        if (flash != null)
+            activeShoot.SetMuzzleFlash(flash);
 
         weaponStyleSwap?.Fire();
 
-        // Store for normalized fade.
         lastShotCooldown = Mathf.Max(0.01f, cfg.fireCooldown);
         fireTimer = cfg.fireCooldown;
 
         return true;
     }
 
-    public bool TrySetAmmoType(AmmoType type)
-    {
-        return combatState.TrySetCurrentAmmoType(type);
-    }
+    public bool TrySetAmmoType(AmmoType type) => combatState.TrySetCurrentAmmoType(type);
+
+    
 
     private AmmoTypeConfig GetConfig(AmmoType type)
     {
         int i = (int)type;
-        if (ammoTypeConfigs == null || ammoTypeConfigs.Length <= i)
-            return null;
-
-        return ammoTypeConfigs[i];
+        return (ammoTypeConfigs != null && i < ammoTypeConfigs.Length) ? ammoTypeConfigs[i] : null;
     }
 
-    private MuzzleFlashController GetMuzzleOverride(AmmoTypeConfig cfg)
-    {
-        if (cfg == null) return null;
+    private void OnStyleChanged(StyleState newState) => ScheduleCacheActiveShoot();
 
-        return currentStyle == StyleState.Retro
-            ? cfg.retroMuzzleFlashOverride
-            : cfg.modernMuzzleFlashOverride;
+    private void ScheduleCacheActiveShoot()
+    {
+        if (cacheRoutine != null)
+            StopCoroutine(cacheRoutine);
+
+        cacheRoutine = StartCoroutine(CacheActiveShootNextFrame());
     }
 
-    private void OnStyleChanged(StyleState newState)
+    private IEnumerator CacheActiveShootNextFrame()
     {
-        currentStyle = newState;
-    }
+        yield return null;
 
-    public AmmoTypeConfig CurrentConfig
-    {
-        get
-        {
-            if (combatState == null) return null;
-            return GetConfig(combatState.CurrentAmmoType);
-        }
-    }
+        activeShoot =
+            (modernShoot != null && modernShoot.isActiveAndEnabled) ? modernShoot :
+            (retroShoot != null && retroShoot.isActiveAndEnabled) ? retroShoot :
+            null;
 
-    public bool ShouldPlayCooldownSmoke
-    {
-        get
-        {
-            AmmoTypeConfig cfg = CurrentConfig;
-            if (cfg == null) return true; // fail-safe: keep smoke on if missing config
-            return cfg.enableCooldownSmoke;
-        }
+        cacheRoutine = null;
     }
 }

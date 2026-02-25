@@ -125,4 +125,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   riseSpeed: 0.06
   lifetime: 0.6
-  lockY: 0
+  lockY: 1

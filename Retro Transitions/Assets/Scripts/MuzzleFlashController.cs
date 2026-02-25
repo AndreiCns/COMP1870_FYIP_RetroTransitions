@@ -1,7 +1,5 @@
 using UnityEngine;
 
-public enum VisualStyle { Modern, Retro }
-
 public class MuzzleFlashController : MonoBehaviour
 {
     [Header("Refs")]
@@ -13,36 +11,55 @@ public class MuzzleFlashController : MonoBehaviour
 
     [Header("Retro")]
     [SerializeField] private SpriteRenderer retroSpritePrefab;
-    [SerializeField] private float retroLife = 0.06f;   // very short pop
+    [SerializeField] private float retroLife = 0.06f;
     [SerializeField] private float retroScale = 1.0f;
     [SerializeField] private bool randomFlipX = true;
 
     [Header("Style")]
-    [SerializeField] private VisualStyle currentStyle = VisualStyle.Modern;
+    [SerializeField] private StyleSwapEvent styleSwapEvent;   //  was VisualStyle enum
+    [SerializeField] private StyleSwapManager styleSwapManager; // for OnEnable sync
 
     [Header("Debug")]
     [SerializeField] private bool logWarnings = true;
 
-    public void SetStyle(VisualStyle style)
-    {
-        currentStyle = style;
+    private StyleState currentStyle = StyleState.Modern;
 
-        // Make sure modern particles aren't lingering when switching to retro
-        if (currentStyle == VisualStyle.Retro)
+    //Lifecycle
+
+    private void OnEnable()
+    {
+        if (styleSwapEvent != null)
+            styleSwapEvent.OnStyleSwap += OnStyleSwap;
+
+        // Sync immediately in case this object activates after the initial broadcast
+        if (styleSwapManager != null)
+            OnStyleSwap(styleSwapManager.CurrentState);
+    }
+
+    private void OnDisable()
+    {
+        if (styleSwapEvent != null)
+            styleSwapEvent.OnStyleSwap -= OnStyleSwap;
+    }
+
+    private void OnStyleSwap(StyleState state)
+    {
+        currentStyle = state;
+        if (currentStyle == StyleState.Retro)
             StopModernVFX();
     }
 
-    // Called from weapon fire (animation event)
+    // Public API
+
     public void Play()
     {
         if (muzzle == null)
         {
-            if (logWarnings)
-                Debug.LogWarning($"{name}: Missing muzzle reference.", this);
+            if (logWarnings) Debug.LogWarning($"{name}: Missing muzzle reference.", this);
             return;
         }
 
-        if (currentStyle == VisualStyle.Modern)
+        if (currentStyle == StyleState.Modern)
             PlayModern();
         else
         {
@@ -51,15 +68,15 @@ public class MuzzleFlashController : MonoBehaviour
         }
     }
 
+    // Private
+
     private void PlayModern()
     {
-        // Re-align to muzzle each shot (weapon moves with recoil/bob)
         if (modernFlash != null)
         {
             modernFlash.transform.SetPositionAndRotation(muzzle.position, muzzle.rotation);
             modernFlash.Play(true);
         }
-
         if (modernSmoke != null)
         {
             modernSmoke.transform.SetPositionAndRotation(muzzle.position, muzzle.rotation);
@@ -71,21 +88,15 @@ public class MuzzleFlashController : MonoBehaviour
     {
         if (retroSpritePrefab == null)
         {
-            if (logWarnings)
-                Debug.LogWarning($"{name}: Retro sprite not assigned.", this);
+            if (logWarnings) Debug.LogWarning($"{name}: Retro sprite not assigned.", this);
             return;
         }
 
-        // Spawn as child so it follows the weapon naturally
         SpriteRenderer sr = Instantiate(retroSpritePrefab, muzzle);
-
         sr.transform.localPosition = Vector3.forward * 0.05f;
         sr.transform.localRotation = Quaternion.identity;
         sr.transform.localScale = Vector3.one * retroScale;
-
-        if (randomFlipX)
-            sr.flipX = Random.value > 0.5f;
-
+        if (randomFlipX) sr.flipX = Random.value > 0.5f;
         Destroy(sr.gameObject, retroLife);
     }
 
@@ -93,7 +104,6 @@ public class MuzzleFlashController : MonoBehaviour
     {
         if (modernFlash != null)
             modernFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-
         if (modernSmoke != null)
             modernSmoke.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }

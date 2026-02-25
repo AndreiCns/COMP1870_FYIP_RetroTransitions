@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2840275390684198266}
   - component: {fileID: -2496805006066729339}
   m_Layer: 6
-  m_Name: PlayerMuzzle_Retro
+  m_Name: BulletMuzzle_Retro
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5791281347814084101}
   - component: {fileID: 713495637949165346}
   m_Layer: 6
-  m_Name: PS_SHLSmoke_Modern
+  m_Name: PS_RKTSmoke_Modern
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -223,7 +223,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 0.6754716, g: 0.6754716, b: 0.6754716, a: 1}
+      maxColor: {r: 0.8113208, g: 0.8113208, b: 0.8113208, a: 1}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -287,7 +287,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.1
+      scalar: 0.25
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -445,7 +445,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationX:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -498,7 +498,7 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotationY:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -551,8 +551,8 @@ ParticleSystem:
         m_RotationOrder: 4
     startRotation:
       serializedVersion: 2
-      minMaxState: 0
-      scalar: 1.5707963
+      minMaxState: 3
+      scalar: 6.283185
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -665,7 +665,7 @@ ParticleSystem:
     serializedVersion: 6
     enabled: 1
     type: 4
-    angle: 5
+    angle: 12
     length: 5
     boxThickness: {x: 0, y: 0, z: 0}
     radiusThickness: 1
@@ -751,7 +751,7 @@ ParticleSystem:
     sphericalDirectionAmount: 0
     randomPositionAmount: 0
     radius:
-      value: 0.0001
+      value: 0.02
       mode: 0
       spread: 0
       speed:
@@ -1375,8 +1375,8 @@ ParticleSystem:
       maxColor: {r: 1, g: 1, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
-        key0: {r: 0.8490566, g: 0.7347677, b: 0.63278747, a: 1}
-        key1: {r: 1, g: 1, b: 1, a: 0.47058824}
+        key0: {r: 0.6226415, g: 0.6226415, b: 0.6226415, a: 0.5882353}
+        key1: {r: 1, g: 1, b: 1, a: 0}
         key2: {r: 1, g: 1, b: 1, a: 0}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1392,7 +1392,7 @@ ParticleSystem:
         ctime6: 0
         ctime7: 0
         atime0: 0
-        atime1: 25212
+        atime1: 65535
         atime2: 65535
         atime3: 65535
         atime4: 0
@@ -1402,7 +1402,7 @@ ParticleSystem:
         m_Mode: 0
         m_ColorSpace: 0
         m_NumColorKeys: 2
-        m_NumAlphaKeys: 3
+        m_NumAlphaKeys: 2
       minGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -1554,11 +1554,11 @@ ParticleSystem:
     uvChannelMask: -1
     rowMode: 1
     sprites:
-    - sprite: {fileID: 704822182, guid: 032adb2b5fd5aec4ab9e714585c7bbda, type: 3}
+    - sprite: {fileID: 89733458, guid: 032adb2b5fd5aec4ab9e714585c7bbda, type: 3}
     flipU: 0
     flipV: 0
   VelocityModule:
-    enabled: 0
+    enabled: 1
     x:
       serializedVersion: 2
       minMaxState: 0
@@ -4868,14 +4868,14 @@ ParticleSystemRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_RenderMode: 1
+  m_RenderMode: 0
   m_MeshDistribution: 0
-  m_SortMode: 1
-  m_MinParticleSize: 0.1
-  m_MaxParticleSize: 0.4
+  m_SortMode: 0
+  m_MinParticleSize: 0
+  m_MaxParticleSize: 0.6
   m_CameraVelocityScale: 0
   m_VelocityScale: 0
-  m_LengthScale: 0
+  m_LengthScale: 2
   m_SortingFudge: 2
   m_NormalDirection: 1
   m_ShadowBias: 0
@@ -4885,8 +4885,8 @@ ParticleSystemRenderer:
   m_EnableGPUInstancing: 1
   m_ApplyActiveColorSpace: 1
   m_AllowRoll: 1
-  m_FreeformStretching: 1
-  m_RotateWithStretchDirection: 0
+  m_FreeformStretching: 0
+  m_RotateWithStretchDirection: 1
   m_UseCustomVertexStreams: 0
   m_VertexStreams: 00010304
   m_UseCustomTrailVertexStreams: 0
@@ -4910,7 +4910,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8611433902367689490}
   m_Layer: 6
-  m_Name: SHL_Modern
+  m_Name: RKT_Modern
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4945,7 +4945,7 @@ GameObject:
   - component: {fileID: 8734817494793577002}
   - component: {fileID: 7438616703659309696}
   m_Layer: 6
-  m_Name: PS_SHLMuzzle_Modern
+  m_Name: PS_RKTMuzzle_Modern
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5485,7 +5485,7 @@ ParticleSystem:
     startRotation:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0
+      scalar: 6.283185
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -6428,7 +6428,7 @@ ParticleSystem:
     startFrame:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.5
+      scalar: 0.25
       minScalar: 0
       maxCurve:
         serializedVersion: 2

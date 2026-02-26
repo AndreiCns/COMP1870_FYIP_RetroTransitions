@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2840275390684198266}
   - component: {fileID: -2496805006066729339}
   m_Layer: 6
-  m_Name: SHLMuzzle_Retro
+  m_Name: CellMuzzle_Retro
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -77,8 +77,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 10
-  m_Sprite: {fileID: -165650476, guid: 2f9a7641590c90345a85b2ba6cf34f40, type: 3}
-  m_Color: {r: 0, g: 0.12713766, b: 1, a: 1}
+  m_Sprite: {fileID: -68242615, guid: 1b6ed95ba04b5ab48a887d0369f48a12, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

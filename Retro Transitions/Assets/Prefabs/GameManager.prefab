@@ -52,7 +52,7 @@ MonoBehaviour:
   musicClip: {fileID: 8300000, guid: 9f5b85c33482f264cbe9fd11add25fe1, type: 3}
   modernSnapshot: {fileID: 5174307362237599147, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
   retroSnapshot: {fileID: 892037215929750757, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
-  transitionTime: 0.25
+  transitionTime: 0.4
 --- !u!82 &8192823925085965415
 AudioSource:
   m_ObjectHideFlags: 0
@@ -66,7 +66,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 0.1
+  m_Volume: 1
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -163,6 +163,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   styleSwapEvent: {fileID: 11400000, guid: bda64b4573b6e7a4a8a0a642242f2982, type: 2}
+  gameAudio: {fileID: 2261423269289914715}
   toggleStyleAction: {fileID: -2016792750424387380, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   verboseLogs: 1
   transitionFX: {fileID: 0}

@@ -5398,25 +5398,40 @@ MonoBehaviour:
   playerSfxGroup: {fileID: 101622701671323166, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
   masterVolume01: 2
   footstepClips:
-  - {fileID: 8300000, guid: 9ff53c7dfea8c184ca0bc94a98381153, type: 3}
-  - {fileID: 8300000, guid: fbf86b6a7a115994d925de1c159f0e9d, type: 3}
-  footstepVolume01: 1
+  - {fileID: 8300000, guid: b874e92ab6daa9841a4a60d924c46ead, type: 3}
+  - {fileID: 8300000, guid: bb1747de7891c314a825017c2fcff37e, type: 3}
+  - {fileID: 8300000, guid: 90bb3b67bb0f1864cb857191c34c9179, type: 3}
+  - {fileID: 8300000, guid: 99ca20767d04a254fad347e03cb7cba6, type: 3}
+  footstepVolume01: 2
   footstepPitchRange: {x: 0.95, y: 1.05}
-  jumpClip: {fileID: 8300000, guid: c244094f15b377948a81110ade94f421, type: 3}
-  jumpVolume01: 1
+  jumpClips:
+  - {fileID: 8300000, guid: b3bc96de752b39344a6c465e2bd23680, type: 3}
+  - {fileID: 8300000, guid: 0ac9549638050624889920805b9e214f, type: 3}
+  jumpVolume01: 0.7
   jumpPitchRange: {x: 0.95, y: 1.05}
-  landingClip: {fileID: 8300000, guid: 9f4cf8460fa10f84e8ca83d295ec02fc, type: 3}
-  landingVolume01: 1
+  landingClip: {fileID: 8300000, guid: 535ab14b41a453a4ca2ab38fda9a6cf9, type: 3}
+  landingVolume01: 0.55
   landingPitchRange: {x: 0.9, y: 1}
-  hurtClip: {fileID: 0}
-  hurtVolume01: 1
+  hurtClips:
+  - {fileID: 8300000, guid: b3c592fb85107a44f8d43f6774621a1c, type: 3}
+  - {fileID: 8300000, guid: ac2aea0b5fff17a408551fec3c24400b, type: 3}
+  - {fileID: 8300000, guid: 38d33cbb5fdaad14599ec3f939ce4b80, type: 3}
+  hurtVolume01: 0.65
   hurtPitchRange: {x: 0.98, y: 1.02}
   hurtMinInterval: 0.15
-  heartbeatLoop: {fileID: 0}
-  heartbeatVolume01: 1
-  lowHpThreshold01: 0.25
-  hysteresis01: 0.05
-  heartbeatCheckInterval: 0.1
+  heartbeatLoop: {fileID: 8300000, guid: 6f0082bafd1a31d41b373a493a43b7d0, type: 3}
+  heartbeatVolume01: 1.4
+  lowHpThreshold01: 0.3
+  hysteresis01: 0.08
+  heartbeatCheckInterval: 0.2
+  musicMixer: {fileID: 24100000, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
+  musicVolumeParam: MusicVol
+  musicDuckDb: -10
+  musicDuckFadeTime: 0.18
+  playerSfxMixer: {fileID: 24100000, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
+  playerSfxVolumeParam: PlayerSFXVol
+  playerSfxDuckDb: -8
+  playerSfxDuckFadeTime: 0.2
 --- !u!82 &4292444458556407963
 AudioSource:
   m_ObjectHideFlags: 0

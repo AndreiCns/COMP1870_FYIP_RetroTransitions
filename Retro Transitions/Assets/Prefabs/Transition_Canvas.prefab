@@ -58,7 +58,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.52156866}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -89,6 +89,7 @@ GameObject:
   - component: {fileID: 587951438421781568}
   - component: {fileID: 3091801071487933954}
   - component: {fileID: 5243906413084295469}
+  - component: {fileID: 7566465880943265428}
   m_Layer: 5
   m_Name: Transition_Canvas
   m_TagString: Untagged
@@ -206,15 +207,118 @@ MonoBehaviour:
   overlayRoot: {fileID: 5987236828459995722}
   overlayImage: {fileID: 5900669675525198203}
   overlayGroup: {fileID: 3091801071487933954}
-  glitchSpriteA: {fileID: 1862415106, guid: 6d485d8c3593a614584c8cc72332e4e0, type: 3}
-  glitchSpriteB: {fileID: 21300000, guid: 4d29586be50161641bca6c641d6c7cd8, type: 3}
-  freezeFrames: 12
-  pauseTargets:
-  - {fileID: 0}
-  preSwapHoldRealtime: 0.02
-  postSwapHoldRealtime: 0.04
-  jitterRect: {fileID: 4328710760573770000}
-  jitterPixels: 6
+  glitchSpriteA: {fileID: 21300000, guid: 8cbfb49af1deca54b96a0062095d9c05, type: 3}
+  glitchSpriteB: {fileID: 21300000, guid: 11b8bce7892bca44f867466b960aedd7, type: 3}
+  freezeFrames: 16
+  pauseManager: {fileID: 0}
+  preSwapHoldRealtime: 0.04
+  postSwapHoldRealtime: 0.06
+  rollPixels: 120
+  tearPixels: 40
+  settleJitterPixels: 6
+  flashAlpha: 1
+  transitionSource: {fileID: 7566465880943265428}
+  modernToRetroClip: {fileID: 8300000, guid: 6021a1ec00ce07c49979af39f1d0acc6, type: 3}
+  retroToModernClip: {fileID: 8300000, guid: 62aaa7dc9c9261648a99dc30380555b4, type: 3}
+  transitionVolume01: 1
+  transitionPitchRange: {x: 0.98, y: 1.02}
+--- !u!82 &7566465880943265428
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4788454509342317223}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: -5011007027413686835, guid: 4ee0c38220bd77c4396cfce608062608, type: 2}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &5987236828459995722
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,6 +10,17 @@ public class LockedDoor : MonoBehaviour, IInteractable
     [SerializeField] private Transform modernVisual;
     [SerializeField] private Transform retroVisual;
 
+    [Header("Audio (door SFX)")]
+    [SerializeField] private AudioSource sfxSource;
+    [SerializeField] private AudioClip lockedClip;
+    [SerializeField] private AudioClip openClip;
+    [SerializeField, Range(0f, 1f)] private float lockedVolume01 = 1f;
+    [SerializeField, Range(0f, 1f)] private float openVolume01 = 1f;
+    [SerializeField] private Vector2 pitchRange = new Vector2(0.98f, 1.02f);
+    [SerializeField] private float lockedMinInterval = 0.25f;
+
+    private float nextLockedTime;
+
     [Header("Door Motion")]
     [SerializeField] private float openHeight = 3f;
     [SerializeField] private float openSpeedModern = 2f;
@@ -39,6 +50,19 @@ public class LockedDoor : MonoBehaviour, IInteractable
     private void Awake()
     {
         doorCollider = GetComponent<Collider>();
+
+        if (sfxSource == null)
+            sfxSource = GetComponent<AudioSource>();
+
+        if (sfxSource == null)
+        {
+            Debug.LogWarning("[LockedDoor] No AudioSource found. Door SFX will be silent.", this);
+        }
+        else
+        {
+            sfxSource.playOnAwake = false;
+            sfxSource.spatialBlend = 1f; // 3D door sound
+        }
 
         if (modernVisual == null || retroVisual == null)
         {
@@ -97,6 +121,7 @@ public class LockedDoor : MonoBehaviour, IInteractable
         if (!HasRequiredKey(state))
         {
             if (verboseLogs) Debug.Log($"[LockedDoor] Locked. Missing {requiredKey} key.", this);
+            PlayLockedSfx();
             return;
         }
 
@@ -117,6 +142,7 @@ public class LockedDoor : MonoBehaviour, IInteractable
 
     private void Open()
     {
+        PlayOpenSfx();
         // Same rule (key required), different presentation per style.
         if (currentStyle == StyleState.Retro)
         {
@@ -154,5 +180,28 @@ public class LockedDoor : MonoBehaviour, IInteractable
         // Door stops blocking once opened.
         if (disableColliderOnOpen && doorCollider != null)
             doorCollider.enabled = false;
+    }
+
+    private void PlayLockedSfx()
+    {
+        if (sfxSource == null || lockedClip == null)
+            return;
+
+        if (Time.time < nextLockedTime)
+            return;
+
+        nextLockedTime = Time.time + lockedMinInterval;
+
+        sfxSource.pitch = Random.Range(pitchRange.x, pitchRange.y);
+        sfxSource.PlayOneShot(lockedClip, lockedVolume01);
+    }
+
+    private void PlayOpenSfx()
+    {
+        if (sfxSource == null || openClip == null)
+            return;
+
+        sfxSource.pitch = Random.Range(pitchRange.x, pitchRange.y);
+        sfxSource.PlayOneShot(openClip, openVolume01);
     }
 }

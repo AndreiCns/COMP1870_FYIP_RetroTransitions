@@ -70,8 +70,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   destroyOnPickup: 1
-  pickupSfx: {fileID: 0}
-  pickupVolume01: 1
+  pickupSfx: {fileID: 8300000, guid: a1f31980d19c04346bacef39d4f2e7cb, type: 3}
+  pickupVolume01: 0.6
   pickupPitchRange: {x: 0.98, y: 1.02}
   modernVisualRoot: {fileID: 2719061642554722146}
   enableModernMotion: 1

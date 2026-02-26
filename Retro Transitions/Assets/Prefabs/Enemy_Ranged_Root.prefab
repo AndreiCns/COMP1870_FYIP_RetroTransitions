@@ -5322,8 +5322,10 @@ MonoBehaviour:
   projectilePrefab: {fileID: 3066708435579681468, guid: 1d3c2c3b29a21b34cbd696d33f405e9f, type: 3}
   audioSource: {fileID: 5734516233963050654}
   shootClips:
-  - {fileID: 8300000, guid: 153a57f2f01baf448aa14429041ebebd, type: 3}
-  shootVolume: 1
+  - {fileID: 8300000, guid: a4d3abb79a57f0441b875636cf0e6800, type: 3}
+  - {fileID: 8300000, guid: ca68eb39fb8eaa54990028815a034362, type: 3}
+  - {fileID: 8300000, guid: efef837227b311b48918b0d13b6bd4e1, type: 3}
+  shootVolume: 0.75
   shootPitchRange: {x: 0.98, y: 1.02}
   attackRange: 8
   fireCooldown: 1.6
@@ -5409,14 +5411,16 @@ MonoBehaviour:
   styleSwapEvent: {fileID: 11400000, guid: bda64b4573b6e7a4a8a0a642242f2982, type: 2}
   audioSource: {fileID: 5734516233963050654}
   hitClips:
-  - {fileID: 8300000, guid: 618aac7ec9d54c240af2f5633eea7a2b, type: 3}
-  - {fileID: 8300000, guid: 86e89a83c97be4d4c98bd2de45af34df, type: 3}
+  - {fileID: 8300000, guid: bb219e520d0540040b9c6774d5b25d08, type: 3}
+  - {fileID: 8300000, guid: fbe18826d8288574cbe7047c42597641, type: 3}
+  - {fileID: 8300000, guid: da387089e87294f4c9c93e5aa7c6e01b, type: 3}
   hitVolume: 1
   hitPitchMin: 0.97
   hitPitchMax: 1.03
   deathClips:
-  - {fileID: 8300000, guid: 6d6d167c0cd65534fadea40c7169c637, type: 3}
-  deathVolume: 1
+  - {fileID: 8300000, guid: 431682b6b9712724b98c276c99b54b69, type: 3}
+  - {fileID: 8300000, guid: 1bf08c930b1bcf349b319b334f51de79, type: 3}
+  deathVolume: 0.9
   deathPitchMin: 0.9
   deathPitchMax: 1.05
   modernHitVfx: {fileID: 3041695842458647921}
@@ -5424,12 +5428,12 @@ MonoBehaviour:
   retroSpriteDuration: 0.1
   vfxSpawnPoint: {fileID: 3755239378459614069}
   freezeOnHit: 1
-  freezeFrames: 10
+  freezeFrames: 8
   agent: {fileID: 1999600841954103461}
   knockbackOnHit: 1
-  knockbackDistance: 1
+  knockbackDistance: 0.4
   knockbackUp: 0
-  knockbackDuration: 0.1
+  knockbackDuration: 0.12
   knockbackEase:
     serializedVersion: 2
     m_Curve:
@@ -5480,8 +5484,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 2
-  MaxDistance: 50
+  MinDistance: 5
+  MaxDistance: 125
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0

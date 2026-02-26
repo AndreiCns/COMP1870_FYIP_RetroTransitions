@@ -139,6 +139,11 @@ public class EnemyStyleSwapListener : MonoBehaviour
     private void TrySyncStateTime(Animator fromA, Animator toA)
     {
         var st = fromA.GetCurrentAnimatorStateInfo(0);
+
+        // Prevent "State could not be found" when controllers don't match 1:1.
+        if (!toA.HasState(0, st.fullPathHash))
+            return;
+
         toA.Play(st.fullPathHash, 0, st.normalizedTime);
         toA.Update(0f);
     }

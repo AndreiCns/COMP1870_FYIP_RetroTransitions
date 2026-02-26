@@ -6,6 +6,12 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
     [SerializeField] private Transform muzzle;
     [SerializeField] private GameObject projectilePrefab;
 
+    [Header("Audio (spatial)")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip[] shootClips;
+    [SerializeField, Range(0f, 1f)] private float shootVolume = 1f;
+    [SerializeField] private Vector2 shootPitchRange = new Vector2(0.98f, 1.02f);
+
     [Header("Tuning")]
     [SerializeField] private float attackRange = 18f;
     [SerializeField] private float fireCooldown = 0.8f;
@@ -32,6 +38,12 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
     {
         animProxy = GetComponentInParent<EnemyVisualAnimatorProxy>();
         attackRangeSqr = attackRange * attackRange;
+
+        if (audioSource == null)
+            audioSource = GetComponentInParent<AudioSource>();
+
+        if (audioSource == null)
+            Debug.LogWarning($"[{name}] RangedAttackModule: No AudioSource found. Shoot SFX will be silent.", this);
     }
 
     private void Update()
@@ -62,6 +74,8 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
     {
         if (!shotArmed) return;
         shotArmed = false;
+
+        PlayShootSfx();
         SpawnProjectile();
     }
 
@@ -70,6 +84,17 @@ public class RangedAttackModule : MonoBehaviour, IEnemyAttack
     {
         if (currentTarget == null || !CanAttack(currentTarget))
             animProxy?.SetBool(isShootingBool, false);
+    }
+
+    private void PlayShootSfx()
+    {
+        if (audioSource == null || shootClips == null || shootClips.Length == 0) return;
+
+        AudioClip clip = shootClips[Random.Range(0, shootClips.Length)];
+        if (clip == null) return;
+
+        audioSource.pitch = Random.Range(shootPitchRange.x, shootPitchRange.y);
+        audioSource.PlayOneShot(clip, shootVolume);
     }
 
     private void SpawnProjectile()

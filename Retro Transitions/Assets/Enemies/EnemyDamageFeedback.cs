@@ -58,10 +58,16 @@ public class EnemyDamageFeedback : MonoBehaviour
     [Tooltip("If assigned, uses this as hit direction source (e.g. player transform). If null, uses enemy->camera direction.")]
     [SerializeField] private Transform attacker;
 
+    [Header("Nav Safety")]
+    [Tooltip("If knockback pushes the agent off-mesh, try to warp back within this distance before restoring.")]
+    [SerializeField] private bool snapBackToNavMesh = true;
+    [SerializeField] private float navSnapMaxDistance = 2f;
+
     private Coroutine freezeRoutine;
     private Coroutine retroSpriteRoutine;
     private Coroutine knockbackRoutine;
 
+    private bool navCached;
     private bool cachedStopped;
     private float cachedSpeed;
     private float cachedAngularSpeed;
@@ -95,18 +101,27 @@ public class EnemyDamageFeedback : MonoBehaviour
 
     private void OnEnable()
     {
+        if (health == null) return;
+
         health.OnDamaged.AddListener(OnDamaged);
         health.OnDied.AddListener(OnDied);
     }
 
     private void OnDisable()
     {
-        health.OnDamaged.RemoveListener(OnDamaged);
-        health.OnDied.RemoveListener(OnDied);
+        if (health != null)
+        {
+            health.OnDamaged.RemoveListener(OnDamaged);
+            health.OnDied.RemoveListener(OnDied);
+        }
 
         if (freezeRoutine != null) StopCoroutine(freezeRoutine);
         if (retroSpriteRoutine != null) StopCoroutine(retroSpriteRoutine);
         if (knockbackRoutine != null) StopCoroutine(knockbackRoutine);
+
+        freezeRoutine = null;
+        retroSpriteRoutine = null;
+        knockbackRoutine = null;
 
         if (retroHitSprite != null) retroHitSprite.enabled = false;
         if (animProxy != null) animProxy.SetPaused(false);
@@ -116,13 +131,13 @@ public class EnemyDamageFeedback : MonoBehaviour
 
     private void OnDamaged(float damage)
     {
-        if (health.IsDead)
+        if (health == null || health.IsDead)
             return;
 
         PlayRandomClip(hitClips, hitVolume, hitPitchMin, hitPitchMax);
         PlayHitVfx();
 
-        // Hit-stop should happen first, then knockback starts during the stop window.
+        // Hit-stop first, knockback during the stop window.
         if (freezeOnHit && freezeFrames > 0)
         {
             if (freezeRoutine != null)
@@ -132,7 +147,7 @@ public class EnemyDamageFeedback : MonoBehaviour
         }
         else
         {
-            // No hit-stop: just do a smooth knockback.
+            // No hit-stop: knockback owns nav pause itself.
             if (knockbackOnHit)
                 StartKnockback();
         }
@@ -152,7 +167,6 @@ public class EnemyDamageFeedback : MonoBehaviour
         if (clip == null)
             return;
 
-        // Enemy audio is spatial + local; routing is handled by the AudioSource mixer group in the inspector.
         audioSource.pitch = Random.Range(pitchMin, pitchMax);
         audioSource.PlayOneShot(clip, volume);
     }
@@ -192,7 +206,7 @@ public class EnemyDamageFeedback : MonoBehaviour
     private IEnumerator HideRetroSpriteAfterDelay()
     {
         yield return new WaitForSeconds(retroSpriteDuration);
-        retroHitSprite.enabled = false;
+        if (retroHitSprite != null) retroHitSprite.enabled = false;
         retroSpriteRoutine = null;
     }
 
@@ -203,11 +217,9 @@ public class EnemyDamageFeedback : MonoBehaviour
 
         PauseNavForFreeze();
 
-        // 1) Freeze for N frames
         for (int i = 0; i < frames; i++)
             yield return null;
 
-        // 2) Start knockback while nav is still paused (smooth lurch)
         if (knockbackOnHit)
         {
             if (knockbackRoutine != null)
@@ -217,20 +229,26 @@ public class EnemyDamageFeedback : MonoBehaviour
             yield return knockbackRoutine;
         }
 
-        // 3) Resume anim + nav
         if (animProxy != null)
             animProxy.SetPaused(false);
 
         RestoreNavAfterFreeze();
-
         freezeRoutine = null;
+    }
+
+    private bool CanControlAgent()
+    {
+        return agent != null && agent.enabled && agent.isOnNavMesh;
     }
 
     private void PauseNavForFreeze()
     {
-        if (agent == null || !agent.enabled)
+        navCached = false;
+
+        if (!CanControlAgent())
             return;
 
+        navCached = true;
         cachedStopped = agent.isStopped;
         cachedSpeed = agent.speed;
         cachedAngularSpeed = agent.angularSpeed;
@@ -238,19 +256,46 @@ public class EnemyDamageFeedback : MonoBehaviour
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
 
-        // Avoid rotation drift during hit-stop.
+        // Prevent rotation drift during hit-stop.
         agent.speed = 0f;
         agent.angularSpeed = 0f;
     }
 
     private void RestoreNavAfterFreeze()
     {
-        if (agent == null || !agent.enabled)
+        if (!navCached)
             return;
+
+        // Agent may have been disabled or moved off-mesh during death/knockback.
+        if (!CanControlAgent())
+        {
+            navCached = false;
+            return;
+        }
+
+        if (snapBackToNavMesh)
+            SnapToNavMeshIfNeeded(navSnapMaxDistance);
+
+        if (!CanControlAgent())
+        {
+            navCached = false;
+            return;
+        }
 
         agent.isStopped = cachedStopped;
         agent.speed = cachedSpeed;
         agent.angularSpeed = cachedAngularSpeed;
+
+        navCached = false;
+    }
+
+    private void SnapToNavMeshIfNeeded(float maxDistance)
+    {
+        if (agent == null || !agent.enabled) return;
+        if (agent.isOnNavMesh) return;
+
+        if (NavMesh.SamplePosition(transform.position, out var hit, maxDistance, NavMesh.AllAreas))
+            agent.Warp(hit.position);
     }
 
     private void StartKnockback()
@@ -261,20 +306,18 @@ public class EnemyDamageFeedback : MonoBehaviour
         if (knockbackRoutine != null)
             StopCoroutine(knockbackRoutine);
 
-        // No hit-stop path: knockback pauses nav briefly itself.
         knockbackRoutine = StartCoroutine(KnockbackRoutine_WithNavOwnership());
     }
 
     private IEnumerator KnockbackRoutine_WithNavOwnership()
     {
-        bool hadAgent = agent != null && agent.enabled;
-
-        if (hadAgent)
+        bool ownsNav = CanControlAgent();
+        if (ownsNav)
             PauseNavForFreeze();
 
         yield return KnockbackRoutine_Core();
 
-        if (hadAgent)
+        if (ownsNav)
             RestoreNavAfterFreeze();
 
         knockbackRoutine = null;
@@ -292,14 +335,10 @@ public class EnemyDamageFeedback : MonoBehaviour
         if (knockbackDistance <= 0f)
             yield break;
 
-        // Direction: away from attacker if provided, otherwise away from camera.
         Vector3 from;
-        if (attacker != null)
-            from = attacker.position;
-        else if (Camera.main != null)
-            from = Camera.main.transform.position;
-        else
-            from = transform.position - transform.forward;
+        if (attacker != null) from = attacker.position;
+        else if (Camera.main != null) from = Camera.main.transform.position;
+        else from = transform.position - transform.forward;
 
         Vector3 dir = transform.position - from;
         dir.y = 0f;
@@ -309,7 +348,6 @@ public class EnemyDamageFeedback : MonoBehaviour
 
         dir.Normalize();
 
-        // Retro reads snappy: reduce distance + slightly longer duration.
         StyleState state = styleSwapEvent != null ? styleSwapEvent.LastState : StyleState.Modern;
 
         float dist = knockbackDistance;
@@ -327,22 +365,29 @@ public class EnemyDamageFeedback : MonoBehaviour
         float duration = Mathf.Max(0.01f, dur);
 
         Vector3 applied = Vector3.zero;
-        bool hadAgent = agent != null && agent.enabled;
+        bool moveWithAgent = CanControlAgent();
 
         while (t < duration)
         {
             t += Time.deltaTime;
             float u = Mathf.Clamp01(t / duration);
-
             float eased = knockbackEase != null ? knockbackEase.Evaluate(u) : u;
 
             Vector3 targetApplied = totalOffset * eased;
             Vector3 step = targetApplied - applied;
 
-            if (hadAgent)
-                agent.Move(step);
+            if (moveWithAgent)
+            {
+                // Agent might fall off-mesh mid-routine if hit near edges.
+                if (CanControlAgent())
+                    agent.Move(step);
+                else
+                    transform.position += step;
+            }
             else
+            {
                 transform.position += step;
+            }
 
             applied = targetApplied;
             yield return null;

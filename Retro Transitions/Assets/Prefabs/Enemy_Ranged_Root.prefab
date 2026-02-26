@@ -5320,6 +5320,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   muzzle: {fileID: 5562643554900207988}
   projectilePrefab: {fileID: 3066708435579681468, guid: 1d3c2c3b29a21b34cbd696d33f405e9f, type: 3}
+  audioSource: {fileID: 5734516233963050654}
+  shootClips:
+  - {fileID: 8300000, guid: 153a57f2f01baf448aa14429041ebebd, type: 3}
+  shootVolume: 1
+  shootPitchRange: {x: 0.98, y: 1.02}
   attackRange: 8
   fireCooldown: 1.6
   projectileSpeed: 20
@@ -5402,7 +5407,6 @@ MonoBehaviour:
   health: {fileID: 7060542006589125585}
   animProxy: {fileID: 2831697344665845165}
   styleSwapEvent: {fileID: 11400000, guid: bda64b4573b6e7a4a8a0a642242f2982, type: 2}
-  gameAudio: {fileID: 0}
   audioSource: {fileID: 5734516233963050654}
   hitClips:
   - {fileID: 8300000, guid: 618aac7ec9d54c240af2f5633eea7a2b, type: 3}
@@ -5423,7 +5427,7 @@ MonoBehaviour:
   freezeFrames: 10
   agent: {fileID: 1999600841954103461}
   knockbackOnHit: 1
-  knockbackDistance: 0.4
+  knockbackDistance: 1
   knockbackUp: 0
   knockbackDuration: 0.1
   knockbackEase:
@@ -5450,7 +5454,11 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  retroDistanceMultiplier: 0.7
+  retroDurationMultiplier: 1.25
   attacker: {fileID: 0}
+  snapBackToNavMesh: 1
+  navSnapMaxDistance: 2
 --- !u!82 &5734516233963050654
 AudioSource:
   m_ObjectHideFlags: 0

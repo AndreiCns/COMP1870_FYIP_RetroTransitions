@@ -64,7 +64,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 536c8ee9780a2ef47a2cfea84f4fcd54, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -324,8 +324,8 @@ MonoBehaviour:
   modernVisualRoot: {fileID: 6547490773959928473}
   enableModernMotion: 1
   floatAmplitude: 0.15
-  floatFrequency: 1.25
-  rotateYawSpeed: 90
+  floatFrequency: 0.6
+  rotateYawSpeed: 75
   useUnscaledTime: 1
   ammoType: 1
   grantAmmoAmount: 50

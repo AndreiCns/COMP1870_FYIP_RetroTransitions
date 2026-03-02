@@ -190,7 +190,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 536c8ee9780a2ef47a2cfea84f4fcd54, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -219,7 +219,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3023225046576650721}
-  m_Mesh: {fileID: 0}
+  m_Mesh: {fileID: 2846846897150290444, guid: a7ce8050ef61d0a42897a69d82e0f05a, type: 3}
 --- !u!1 &3854959165839457409
 GameObject:
   m_ObjectHideFlags: 0
@@ -296,8 +296,8 @@ MonoBehaviour:
   modernVisualRoot: {fileID: 1560087133984139659}
   enableModernMotion: 1
   floatAmplitude: 0.15
-  floatFrequency: 1.25
-  rotateYawSpeed: 90
+  floatFrequency: 0.6
+  rotateYawSpeed: 75
   useUnscaledTime: 1
   healAmount: 25
   consumeIfFullHealth: 0

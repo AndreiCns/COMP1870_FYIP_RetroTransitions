@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 24ab31cca913086459d5f59ecfc09c5f
+guid: e2175ece219848140be33883dc5f9cd1
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -45,10 +45,10 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 75
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -123,13 +123,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: propsUI_0
+      name: Props_Psd_Retro_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 9
+        x: 82
+        y: 60
         width: 47
-        height: 52
+        height: 63
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -138,20 +138,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: afd1774baa197ea4d97c6fe8d952fa87
-      internalID: 447082876
+      spriteID: 642ff46c48aee9843ae4ed41a69c5fb5
+      internalID: -700584633
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: propsUI_1
+      name: Props_Psd_Retro_1
       rect:
         serializedVersion: 2
-        x: 79
-        y: 0
-        width: 80
-        height: 110
+        x: 143
+        y: 105
+        width: 37
+        height: 31
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -160,20 +160,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 6d304448da8af844fbe90070f9b24763
-      internalID: -224308649
+      spriteID: 8b9139e1d10d8cf49a0e8dbdc138b578
+      internalID: -240970092
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: propsUI_2
+      name: Props_Psd_Retro_2
       rect:
         serializedVersion: 2
-        x: 191
-        y: 9
-        width: 84
-        height: 78
+        x: 211
+        y: 87
+        width: 47
+        height: 45
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -182,20 +182,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3157da461a7b9524981d7d0098cb76ec
-      internalID: -354791582
+      spriteID: 39b44fde9f9c7c749afe3fd8e9b3325a
+      internalID: -1281813363
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: propsUI_3
+      name: Props_Psd_Retro_3
       rect:
         serializedVersion: 2
-        x: 313
-        y: 15
-        width: 62
-        height: 50
+        x: 270
+        y: 119
+        width: 47
+        height: 47
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -204,20 +204,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 82d539aacd3d97d4b8b913f0dd2e7c62
-      internalID: -2146912418
+      spriteID: 51f5fbc4bf2b1164697edade6a67e8f9
+      internalID: -1020465470
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: propsUI_4
+      name: Props_Psd_Retro_4
       rect:
         serializedVersion: 2
-        x: 427
-        y: 5
-        width: 105
-        height: 98
+        x: 24
+        y: 61
+        width: 43
+        height: 42
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -226,8 +226,74 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d5f51f76c27903d4188f4d404c4f7778
-      internalID: 45158420
+      spriteID: 4da86d9d34362634e8351606e1dd7642
+      internalID: -2131581361
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_Psd_Retro_5
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 55
+        width: 36
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fd5d4dff58743c541a654909a7a8030e
+      internalID: 1781696777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_Psd_Retro_6
+      rect:
+        serializedVersion: 2
+        x: 265
+        y: 40
+        width: 47
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d606c0a01dcc35e42a479fad2ff1e08d
+      internalID: -1478421152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_Psd_Retro_7
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 54
+        width: 71
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c8848f16496ecb4591599f6b46fc56b
+      internalID: 1638215933
       vertices: []
       indices: 
       edges: []
@@ -236,7 +302,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5aa0b9533eadfce4ca2cc3edc8c8182e
+    spriteID: 380db52ce92516249a079a7942d9561d
     internalID: 0
     vertices: []
     indices: 
@@ -246,11 +312,14 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      propsUI_0: 447082876
-      propsUI_1: -224308649
-      propsUI_2: -354791582
-      propsUI_3: -2146912418
-      propsUI_4: 45158420
+      Props_Psd_Retro_0: -700584633
+      Props_Psd_Retro_1: -240970092
+      Props_Psd_Retro_2: -1281813363
+      Props_Psd_Retro_3: -1020465470
+      Props_Psd_Retro_4: -2131581361
+      Props_Psd_Retro_5: 1781696777
+      Props_Psd_Retro_6: -1478421152
+      Props_Psd_Retro_7: 1638215933
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

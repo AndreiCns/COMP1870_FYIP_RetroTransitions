@@ -14,13 +14,12 @@ public class PlayerShootModule : MonoBehaviour
     [Header("Tuning")]
     [SerializeField] private float damage = 10f;
     [SerializeField] private float range = 200f;
-    [SerializeField] private LayerMask hitMask;
+    [SerializeField] private LayerMask hitMask = ~0;
 
     [Header("Debug")]
     [SerializeField] private bool drawDebugRay = false;
     [SerializeField] private bool logWarnings = true;
-
-    
+    [SerializeField] private bool logFireEvent = false;
 
     public bool CanFire => fireLockTimer <= 0f;
 
@@ -31,27 +30,38 @@ public class PlayerShootModule : MonoBehaviour
     {
         owner = transform.root.gameObject;
 
-        if (playerCamera == null && logWarnings)
-            Debug.LogWarning($"{name}: playerCamera not assigned", this);
-        if (muzzle == null && logWarnings)
-            Debug.LogWarning($"{name}: muzzle not assigned", this);
-        if (combatController == null && logWarnings)
-            Debug.LogWarning($"{name}: combatController not assigned", this);
-        if (playerAudio == null && logWarnings)
-            Debug.LogWarning($"{name}: playerAudio not assigned", this);
+        if (combatController == null)
+            combatController = GetComponentInParent<PlayerCombatController>();
 
+        if (playerAudio == null)
+            playerAudio = GetComponentInParent<PlayerAudioController>();
+
+        if (muzzleFlash == null)
+            muzzleFlash = GetComponentInChildren<MuzzleFlashController>(true);
+
+        if (muzzle == null && muzzleFlash != null)
+        {
+            // If your muzzle flash controller already knows the muzzle, you can ignore this.
+            // Otherwise try find a child called "Muzzle" as a convention.
+            Transform t = transform.Find("Muzzle");
+            if (t != null) muzzle = t;
+        }
+
+        if (playerCamera == null)
+            playerCamera = GetComponentInParent<Camera>();
+
+        if (playerCamera == null)
+            playerCamera = Camera.main;
+
+        if (logWarnings)
+        {
+            if (playerCamera == null) Debug.LogWarning($"{name}: playerCamera not found/assigned.", this);
+            if (combatController == null) Debug.LogWarning($"{name}: combatController not found/assigned.", this);
+        }
     }
 
-    private void OnEnable()
-    {
-        // Reset local lock if this module gets disabled/enabled on style swap.
-        fireLockTimer = 0f;
-    }
-
-    private void OnDisable()
-    {
-        fireLockTimer = 0f;
-    }
+    private void OnEnable() => fireLockTimer = 0f;
+    private void OnDisable() => fireLockTimer = 0f;
 
     private void Update()
     {
@@ -73,12 +83,13 @@ public class PlayerShootModule : MonoBehaviour
     private void FireProjectileInternal(AmmoTypeConfig cfg)
     {
         if (playerCamera == null || cfg == null)
+        {
+            if (logWarnings) Debug.LogWarning($"{name}: Fire blocked (missing camera or cfg).", this);
             return;
+        }
 
-        // VFX (config + global style handled inside controller)
+        // VFX + SFX (timed to the animation event)
         muzzleFlash?.Play(cfg);
-
-        // SFX (per ammo type clip handled by audio manager)
         playerAudio?.PlayGunshot(cfg);
 
         Vector3 origin = playerCamera.transform.position;
@@ -86,8 +97,7 @@ public class PlayerShootModule : MonoBehaviour
 
         if (Physics.Raycast(origin, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
         {
-            if (drawDebugRay)
-                Debug.DrawLine(origin, hit.point, Color.red, 1f);
+            if (drawDebugRay) Debug.DrawLine(origin, hit.point, Color.red, 1f);
 
             if (hit.collider.TryGetComponent(out IDamageable dmg))
                 dmg.TakeDamage(damage, new DamageInfo { Point = hit.point, Direction = direction, Source = owner });
@@ -101,9 +111,27 @@ public class PlayerShootModule : MonoBehaviour
     // Animation Event calls this (no params)
     public void FireProjectile()
     {
-        if (combatController == null)
-            return;
+        if (logFireEvent)
+            Debug.Log($"[{name}] FireProjectile animation event received.", this);
 
-        FireProjectileInternal(combatController.CurrentConfig);
+        if (combatController == null)
+        {
+            if (logWarnings) Debug.LogWarning($"{name}: Fire blocked (combatController null).", this);
+            return;
+        }
+
+        AmmoTypeConfig cfg = combatController.CurrentConfig;
+        if (cfg == null)
+        {
+            if (logWarnings) Debug.LogWarning($"{name}: Fire blocked (CurrentConfig null).", this);
+            return;
+        }
+
+        FireProjectileInternal(cfg);
+    }
+    public void FireImmediate(AmmoTypeConfig cfg)
+    {
+        if (cfg == null) return;
+        FireProjectileInternal(cfg);
     }
 }

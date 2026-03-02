@@ -29,12 +29,14 @@ public class HUDStyleSwapListener : MonoBehaviour
         [SerializeField] private Sprite modernNeutral;
         [SerializeField] private Sprite modernHurt;
         [SerializeField] private Sprite modernCritical;
+        [SerializeField] private Sprite modernCriticalHurt;
         [SerializeField] private Sprite modernDead;
 
         [Header("Retro")]
         [SerializeField] private Sprite retroNeutral;
         [SerializeField] private Sprite retroHurt;
         [SerializeField] private Sprite retroCritical;
+        [SerializeField] private Sprite retroCriticalHurt;
         [SerializeField] private Sprite retroDead;
 
         public void Apply(StyleState state, HUDFaceController face)
@@ -42,9 +44,9 @@ public class HUDStyleSwapListener : MonoBehaviour
             if (face == null) return;
 
             if (state == StyleState.Modern)
-                face.SetFaceSprites(modernNeutral, modernHurt, modernCritical, modernDead);
+                face.SetFaceSprites(modernNeutral, modernHurt, modernCritical, modernCriticalHurt, modernDead);
             else
-                face.SetFaceSprites(retroNeutral, retroHurt, retroCritical, retroDead);
+                face.SetFaceSprites(retroNeutral, retroHurt, retroCritical, retroCriticalHurt, retroDead);
         }
     }
 

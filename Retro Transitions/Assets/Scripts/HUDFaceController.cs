@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class HUDFaceController : MonoBehaviour
 {
@@ -8,32 +9,33 @@ public class HUDFaceController : MonoBehaviour
         Neutral,
         Hurt,
         Critical,
+        CriticalHurt,
         Dead
     }
 
     [Header("Refs")]
     [SerializeField] private Health health;
-    [SerializeField] private UnityEngine.UI.Image faceImage;
+    [SerializeField] private Image faceImage;
 
     [Header("Sprites")]
     [SerializeField] private Sprite neutral;
     [SerializeField] private Sprite hurt;
     [SerializeField] private Sprite critical;
+    [SerializeField] private Sprite criticalHurt;
     [SerializeField] private Sprite dead;
 
     [Header("Tuning")]
-    [SerializeField] private float criticalThreshold01 = 0.2f;
+    [Tooltip("Below this HP%, the baseline face becomes Critical.")]
+    [SerializeField, Range(0.05f, 0.95f)] private float criticalThreshold01 = 0.4f;
     [SerializeField] private float hurtFlashTime = 0.25f;
 
     private Coroutine flashRoutine;
-
-    // While this is true, Update won't overwrite the hurt sprite.
     private bool isHurtFlashing;
 
     private void Awake()
     {
         if (faceImage == null)
-            faceImage = GetComponentInChildren<UnityEngine.UI.Image>();
+            faceImage = GetComponentInChildren<Image>();
 
         if (health == null)
             health = FindFirstObjectByType<Health>();
@@ -64,27 +66,13 @@ public class HUDFaceController : MonoBehaviour
         if (isHurtFlashing)
             return;
 
-        if (health.IsDead)
-        {
-            SetFace(FaceState.Dead);
-            return;
-        }
-
-        float hp01 = health.Max <= 0f ? 0f : (health.Current / health.Max);
-
-        if (hp01 <= criticalThreshold01)
-            SetFace(FaceState.Critical);
-        else
-            SetFace(FaceState.Neutral);
+        SetFace(GetCurrentFaceState());
     }
 
     private void OnDamaged(float amount)
     {
-        if (health == null || health.IsDead)
-        {
-            SetFace(FaceState.Dead);
+        if (health == null)
             return;
-        }
 
         if (flashRoutine != null)
             StopCoroutine(flashRoutine);
@@ -95,19 +83,39 @@ public class HUDFaceController : MonoBehaviour
     private IEnumerator HurtFlash()
     {
         isHurtFlashing = true;
-        SetFace(FaceState.Hurt);
+
+        if (health.IsDead)
+        {
+            SetFace(FaceState.Dead);
+        }
+        else
+        {
+            float hp01 = GetHp01();
+            bool isCritical = hp01 <= criticalThreshold01;
+
+            SetFace(isCritical ? FaceState.CriticalHurt : FaceState.Hurt);
+        }
 
         yield return new WaitForSecondsRealtime(hurtFlashTime);
 
         isHurtFlashing = false;
         flashRoutine = null;
+
+        // Snap back to baseline immediately after flash ends.
+        SetFace(GetCurrentFaceState());
     }
 
-    public void SetFaceSprites(Sprite neutralSprite, Sprite hurtSprite, Sprite criticalSprite, Sprite deadSprite)
+    public void SetFaceSprites(
+        Sprite neutralSprite,
+        Sprite hurtSprite,
+        Sprite criticalSprite,
+        Sprite criticalHurtSprite,
+        Sprite deadSprite)
     {
         neutral = neutralSprite;
         hurt = hurtSprite;
         critical = criticalSprite;
+        criticalHurt = criticalHurtSprite;
         dead = deadSprite;
 
         if (!isHurtFlashing)
@@ -119,8 +127,13 @@ public class HUDFaceController : MonoBehaviour
         if (health == null) return FaceState.Neutral;
         if (health.IsDead) return FaceState.Dead;
 
-        float hp01 = health.Max <= 0f ? 0f : (health.Current / health.Max);
+        float hp01 = GetHp01();
         return (hp01 <= criticalThreshold01) ? FaceState.Critical : FaceState.Neutral;
+    }
+
+    private float GetHp01()
+    {
+        return health.Max <= 0f ? 0f : (health.Current / health.Max);
     }
 
     private void SetFace(FaceState state)
@@ -132,6 +145,7 @@ public class HUDFaceController : MonoBehaviour
             FaceState.Neutral => neutral,
             FaceState.Hurt => hurt != null ? hurt : neutral,
             FaceState.Critical => critical != null ? critical : neutral,
+            FaceState.CriticalHurt => criticalHurt != null ? criticalHurt : (hurt != null ? hurt : critical != null ? critical : neutral),
             FaceState.Dead => dead != null ? dead : (critical != null ? critical : neutral),
             _ => neutral
         };

@@ -4142,6 +4142,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 652076782}
     - target: {fileID: 2261423269289914715, guid: f54dea1b3fe0b5246916c77eaf87b4f4, type: 3}
+      propertyPath: musicClip
+      value: 
+      objectReference: {fileID: 8300000, guid: 7d70b9f85a6c4f74ebf7164fcc185c03, type: 3}
+    - target: {fileID: 2261423269289914715, guid: f54dea1b3fe0b5246916c77eaf87b4f4, type: 3}
       propertyPath: transitionTime
       value: 0.4
       objectReference: {fileID: 0}
@@ -4432,6 +4436,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 89154642907870182, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 2aa9b578b20e955429fe5a2f00966415, type: 2}
     - target: {fileID: 1693364570441993171, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
       propertyPath: styleSwapManager
       value: 
@@ -4512,6 +4520,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8393231150107281146, guid: 556c011bd1a2db74ca6fb8bdcb313c24, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 1bf3f8e42d2f3a34baeeabc6aaf7f75c, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

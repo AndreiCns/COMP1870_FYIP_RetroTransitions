@@ -5273,7 +5273,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5b1f4ce08c58804fa898cea071505a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 50
+  maxHealth: 100
   onDamaged:
     m_PersistentCalls:
       m_Calls: []
@@ -5297,7 +5297,7 @@ MonoBehaviour:
   animProxy: {fileID: 2831697344665845165}
   attackModuleBehaviour: {fileID: 6640040306213971789}
   aggroRange: 25
-  stopDistance: 8
+  stopDistance: 5.5
   distanceHysteresis: 1.5
   requireLineOfSight: 0
   eyes: {fileID: 2889671011857545100}
@@ -5327,9 +5327,9 @@ MonoBehaviour:
   - {fileID: 8300000, guid: efef837227b311b48918b0d13b6bd4e1, type: 3}
   shootVolume: 0.75
   shootPitchRange: {x: 0.98, y: 1.02}
-  attackRange: 8
-  fireCooldown: 1.6
-  projectileSpeed: 20
+  attackRange: 7
+  fireCooldown: 1.8
+  projectileSpeed: 22
   damage: 10
   aimHeightOffset: 1.2
   isShootingBool: isShooting
@@ -5431,7 +5431,7 @@ MonoBehaviour:
   freezeFrames: 8
   agent: {fileID: 1999600841954103461}
   knockbackOnHit: 1
-  knockbackDistance: 0.4
+  knockbackDistance: 0.2
   knockbackUp: 0
   knockbackDuration: 0.12
   knockbackEase:

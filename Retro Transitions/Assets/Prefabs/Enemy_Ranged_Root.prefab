@@ -5296,7 +5296,7 @@ MonoBehaviour:
   health: {fileID: 7060542006589125585}
   animProxy: {fileID: 2831697344665845165}
   attackModuleBehaviour: {fileID: 6640040306213971789}
-  aggroRange: 25
+  aggroRange: 60
   stopDistance: 5.5
   distanceHysteresis: 1.5
   requireLineOfSight: 0

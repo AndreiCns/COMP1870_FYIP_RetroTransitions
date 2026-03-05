@@ -25,7 +25,22 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float jumpHeight = 1.5f;
     [SerializeField] private float gravity = -20f;
     [SerializeField] private int maxJumps = 2;
+
+    [Header("Footsteps")]
     [SerializeField] private float stepInterval = 0.5f;
+    [SerializeField] private float minFootstepSpeed = 1.0f; // m/s
+
+    [Header("Grounding / Slopes")]
+    [Tooltip("SphereCast distance to find the surface under the player.")]
+    [SerializeField] private float groundCheckDistance = 0.35f;
+    [Tooltip("Downward velocity used while grounded to keep contact on slopes/steps.")]
+    [SerializeField] private float groundStickForce = 12f;
+    [SerializeField] private LayerMask groundMask = ~0;
+
+    [Header("Landing Detection")]
+    [SerializeField] private float minAirTimeForLanding = 0.12f;
+    [SerializeField] private float minFallSpeedForLanding = -3.0f;
+    [SerializeField] private float landingCooldown = 0.12f;
 
     [Header("FOV Kick")]
     [SerializeField] private float fovKickAmount = 8f;
@@ -36,51 +51,55 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float bobAmount = 0.03f;
 
     [Header("Weapon Recoil")]
-    
     [SerializeField] private float recoilRecovery = 12f;
 
     [Header("Interact")]
     [SerializeField] private float interactRange = 3f;
     [SerializeField] private LayerMask interactMask = ~0;
 
+    private CharacterController controller;
+
+    private Vector2 moveInput;
+    private Vector2 lookInput;
+    private float pitch;
+
+    private Vector3 velocity;
+    private int jumpCount;
+
+    private bool wasGrounded;
+    private float airTime;
+    private float lastLandingTime;
+
+    private float stepTimer;
+
+    private RaycastHit groundHit;
+    private bool hasGroundHit;
+
+    private float bobTimer;
+    private float defaultFOV;
+    private Coroutine fovKickRoutine;
+    private Vector3 weaponHolderInitialLocalPos;
+
     private Vector3 recoilCurrentPos;
     private Vector3 recoilTargetPos;
     private Vector3 recoilCurrentRot;
     private Vector3 recoilTargetRot;
 
-    private float bobTimer;
-    private float defaultFOV;
-    private Coroutine fovKickRoutine;
-
-    private Vector3 weaponHolderInitialLocalPos;
-
-    private CharacterController controller;
-    private Vector2 moveInput;
-    private Vector2 lookInput;
-    private float pitch;
-    private Vector3 velocity;
-    private int jumpCount;
-    private float stepTimer;
-    private bool wasGrounded;
-
-    // Held-fire prevents InputSystem "performed" spam and keeps ROF deterministic.
     private bool fireHeld;
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
 
-        // Audio manager is optional for edit-time, but expected at runtime.
         if (playerAudio == null)
             playerAudio = GetComponent<PlayerAudioController>();
-        // Combat is optional at edit-time, but the controller expects it at runtime.
+
         if (combat == null)
             combat = GetComponent<PlayerCombatController>();
     }
 
     private void Start()
     {
-        // Hard requirements; better to disable than chase nulls mid-playtest.
         if (cam == null || playerCamera == null || weaponHolder == null || weaponRecoil == null)
         {
             Debug.LogError($"[FPC] Missing required references on '{gameObject.name}'.", this);
@@ -91,7 +110,6 @@ public class FirstPersonController : MonoBehaviour
         defaultFOV = cam.fieldOfView;
         weaponHolderInitialLocalPos = weaponHolder.localPosition;
 
-        // FPS feel: lock cursor by default.
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -122,29 +140,10 @@ public class FirstPersonController : MonoBehaviour
         TryInteract();
     }
 
-    public void OnAmmo1(InputAction.CallbackContext ctx)
-    {
-        if (!ctx.performed) return;
-        combat?.TrySetAmmoType(AmmoType.Bullet);
-    }
-
-    public void OnAmmo2(InputAction.CallbackContext ctx)
-    {
-        if (!ctx.performed) return;
-        combat?.TrySetAmmoType(AmmoType.Shell);
-    }
-
-    public void OnAmmo3(InputAction.CallbackContext ctx)
-    {
-        if (!ctx.performed) return;
-        combat?.TrySetAmmoType(AmmoType.Rocket);
-    }
-
-    public void OnAmmo4(InputAction.CallbackContext ctx)
-    {
-        if (!ctx.performed) return;
-        combat?.TrySetAmmoType(AmmoType.Plasma);
-    }
+    public void OnAmmo1(InputAction.CallbackContext ctx) { if (ctx.performed) combat?.TrySetAmmoType(AmmoType.Bullet); }
+    public void OnAmmo2(InputAction.CallbackContext ctx) { if (ctx.performed) combat?.TrySetAmmoType(AmmoType.Shell); }
+    public void OnAmmo3(InputAction.CallbackContext ctx) { if (ctx.performed) combat?.TrySetAmmoType(AmmoType.Rocket); }
+    public void OnAmmo4(InputAction.CallbackContext ctx) { if (ctx.performed) combat?.TrySetAmmoType(AmmoType.Plasma); }
 
     private void Update()
     {
@@ -153,7 +152,6 @@ public class FirstPersonController : MonoBehaviour
         HandleLook(dt);
         HandleMovement(dt);
 
-        // Fire attempts are polled so cooldown + ammo are always the single source of truth.
         if (fireHeld && combat != null)
         {
             AmmoTypeConfig cfg = combat.CurrentConfig;
@@ -167,22 +165,9 @@ public class FirstPersonController : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
-        // LateUpdate keeps weapon visuals smooth after movement/camera updates.
         HandleWeaponBob(dt);
         SyncWeaponToCamera();
         HandleWeaponRecoil(dt);
-    }
-
-    private void ApplyRecoilKick(AmmoTypeConfig cfg)
-    {
-        if (cfg == null) return;
-
-        // Per-ammo recoil tuning.
-        recoilTargetPos -= new Vector3(0f, 0f, cfg.recoilKickback);
-        recoilTargetRot += new Vector3(-cfg.recoilUp, 0f, 0f);
-
-        // Optional: allow per-ammo recovery override by temporarily setting recovery speed.
-        recoilRecovery = Mathf.Max(0.01f, cfg.recoilRecovery);
     }
 
     private void HandleLook(float dt)
@@ -199,30 +184,62 @@ public class FirstPersonController : MonoBehaviour
 
     private void HandleMovement(float dt)
     {
-        bool isGroundedNow = controller.isGrounded;
+        bool groundedNow = controller.isGrounded;
 
-        // Landing sound only on actual air->ground transitions with noticeable fall speed.
-        if (!wasGrounded && isGroundedNow && velocity.y < -2f)
-            PlayLandingSFX();
+        // Collect the surface normal so we can move cleanly on slopes.
+        UpdateGroundHit();
 
-        wasGrounded = isGroundedNow;
+        // Track "real airtime" so slope grounding flicker doesn't spam land events.
+        if (!groundedNow) airTime += dt;
 
-        if (controller.isGrounded && velocity.y < 0f)
+        if (!wasGrounded && groundedNow)
         {
-            velocity.y = -2f; // Keeps the controller planted on slopes/steps.
+            bool validAir = airTime >= minAirTimeForLanding;
+            bool validFall = velocity.y <= minFallSpeedForLanding;
+            bool cooledDown = Time.time >= lastLandingTime + landingCooldown;
+
+            if (validAir && validFall && cooledDown)
+            {
+                PlayLandingSFX();
+                lastLandingTime = Time.time;
+            }
+
+            airTime = 0f;
+        }
+
+        if (groundedNow && wasGrounded)
+            airTime = 0f;
+
+        wasGrounded = groundedNow;
+
+        Vector2 clamped = Vector2.ClampMagnitude(moveInput, 1f);
+        Vector3 wishMove = (transform.right * clamped.x + transform.forward * clamped.y);
+        wishMove = Vector3.ClampMagnitude(wishMove, 1f);
+
+        // Project horizontal movement onto the slope plane to avoid ramp jitter.
+        Vector3 moveOnSurface = wishMove;
+        if (groundedNow && hasGroundHit)
+        {
+            float slopeAngle = Vector3.Angle(groundHit.normal, Vector3.up);
+
+            if (slopeAngle <= controller.slopeLimit)
+                moveOnSurface = Vector3.ProjectOnPlane(wishMove, groundHit.normal).normalized * wishMove.magnitude;
+        }
+
+        // Gravity + ground stick keeps CC glued to uneven triangles.
+        velocity.y += gravity * dt;
+
+        if (groundedNow && velocity.y <= 0f)
+        {
+            velocity.y = -groundStickForce;
             jumpCount = 0;
         }
 
-        Vector2 clamped = Vector2.ClampMagnitude(moveInput, 1f);
-        Vector3 move = (transform.right * clamped.x + transform.forward * clamped.y);
-        float moveAmount = move.magnitude;
-
-        velocity.y += gravity * dt;
-
-        Vector3 totalMove = (move * moveSpeed) + new Vector3(0f, velocity.y, 0f);
+        Vector3 totalMove = (moveOnSurface * moveSpeed) + Vector3.up * velocity.y;
         controller.Move(totalMove * dt);
 
-        HandleFootsteps(dt, moveAmount);
+        float horizontalSpeed = new Vector3(controller.velocity.x, 0f, controller.velocity.z).magnitude;
+        HandleFootsteps(dt, horizontalSpeed);
     }
 
     private void Jump()
@@ -238,16 +255,12 @@ public class FirstPersonController : MonoBehaviour
         fovKickRoutine = StartCoroutine(FOVKick());
     }
 
-    private void PlayJumpSFX() => playerAudio?.PlayJump();
-    private void PlayLandingSFX() => playerAudio?.PlayLanding();
-
-    private void PlayFootstepSFX() => playerAudio?.PlayFootstep();
-
-    private void HandleFootsteps(float dt, float moveAmount)
+    private void HandleFootsteps(float dt, float horizontalSpeed)
     {
-        if (!controller.isGrounded || moveAmount < 0.1f)
+        if (!controller.isGrounded || horizontalSpeed < minFootstepSpeed)
         {
-            stepTimer = 0f;
+            // Don't slam to zero or you'll re-trigger instantly when speed flickers.
+            stepTimer = Mathf.Min(stepTimer, stepInterval);
             return;
         }
 
@@ -260,6 +273,38 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    private bool UpdateGroundHit()
+    {
+        // Slightly above feet so we still find ground on steps/edges.
+        Vector3 origin = transform.position + controller.center + Vector3.up * 0.05f;
+        float radius = Mathf.Max(0.05f, controller.radius * 0.95f);
+
+        hasGroundHit = Physics.SphereCast(
+            origin,
+            radius,
+            Vector3.down,
+            out groundHit,
+            groundCheckDistance,
+            groundMask,
+            QueryTriggerInteraction.Ignore
+        );
+
+        return hasGroundHit;
+    }
+
+    private void ApplyRecoilKick(AmmoTypeConfig cfg)
+    {
+        if (cfg == null) return;
+
+        recoilTargetPos -= new Vector3(0f, 0f, cfg.recoilKickback);
+        recoilTargetRot += new Vector3(-cfg.recoilUp, 0f, 0f);
+
+        recoilRecovery = Mathf.Max(0.01f, cfg.recoilRecovery);
+    }
+
+    private void PlayJumpSFX() => playerAudio?.PlayJump();
+    private void PlayLandingSFX() => playerAudio?.PlayLanding();
+    private void PlayFootstepSFX() => playerAudio?.PlayFootstep();
 
     private IEnumerator FOVKick()
     {
@@ -316,7 +361,6 @@ public class FirstPersonController : MonoBehaviour
 
     private void SyncWeaponToCamera()
     {
-        // Keeps the weapon orientation locked to the camera even during character rotation.
         weaponHolder.rotation = playerCamera.rotation;
     }
 

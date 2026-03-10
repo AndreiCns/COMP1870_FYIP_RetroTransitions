@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Collider))]
 public class PopupTrigger : MonoBehaviour
@@ -21,9 +22,14 @@ public class PopupTrigger : MonoBehaviour
     [SerializeField] private float styleSwapDelay = 2f;
     [SerializeField] private bool cancelSwapIfPlayerLeaves;
 
+    [Header("Scene Flow")]
+    [SerializeField] private bool restartSceneAfterPopup;
+    [SerializeField] private float restartDelay = 3f;
+
     private bool hasTriggered;
-    private Coroutine delayedSwapRoutine;
     private bool playerInside;
+    private Coroutine delayedSwapRoutine;
+    private Coroutine restartRoutine;
 
     private void Awake()
     {
@@ -41,6 +47,7 @@ public class PopupTrigger : MonoBehaviour
         {
             Debug.LogError("[PopupTrigger] Style swap is enabled but no StyleSwapManager is assigned.", this);
             enabled = false;
+            return;
         }
     }
 
@@ -98,6 +105,15 @@ public class PopupTrigger : MonoBehaviour
             delayedSwapRoutine = StartCoroutine(DelayedStyleSwap());
         }
 
+        // End-of-level flow can reuse the same popup trigger.
+        if (restartSceneAfterPopup)
+        {
+            if (restartRoutine != null)
+                StopCoroutine(restartRoutine);
+
+            restartRoutine = StartCoroutine(RestartSceneAfterDelay());
+        }
+
         hasTriggered = true;
     }
 
@@ -113,5 +129,13 @@ public class PopupTrigger : MonoBehaviour
 
         styleSwapManager.ForceStyle(targetStyle, "PopupTrigger");
         delayedSwapRoutine = null;
+    }
+
+    private IEnumerator RestartSceneAfterDelay()
+    {
+        yield return new WaitForSeconds(restartDelay);
+
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.buildIndex);
     }
 }

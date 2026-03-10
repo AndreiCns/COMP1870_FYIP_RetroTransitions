@@ -6,9 +6,8 @@ public class LockedDoor : MonoBehaviour, IInteractable
     [Header("Lock")]
     [SerializeField] private KeyType requiredKey;
 
-    [Header("Door Visuals")]
-    [SerializeField] private Transform modernVisual;
-    [SerializeField] private Transform retroVisual;
+    [Header("Door")]
+    [SerializeField] private Transform doorVisual;
 
     [Header("Audio (door SFX)")]
     [SerializeField] private AudioSource sfxSource;
@@ -19,33 +18,26 @@ public class LockedDoor : MonoBehaviour, IInteractable
     [SerializeField] private Vector2 pitchRange = new Vector2(0.98f, 1.02f);
     [SerializeField] private float lockedMinInterval = 0.25f;
 
-    private float nextLockedTime;
-
     [Header("Door Motion")]
     [SerializeField] private float openHeight = 3f;
-    [SerializeField] private float openSpeedModern = 2f;
+    [SerializeField] private float openSpeed = 2f;
+    [SerializeField] private bool snapOpenInstantly = false;
 
     [Header("Open Behaviour")]
     [SerializeField] private bool disableColliderOnOpen = true;
 
-    [Header("Style (optional)")]
-    [SerializeField] private StyleSwapEvent styleSwapEvent;
-
     [Header("Debug")]
     [SerializeField] private bool verboseLogs = false;
 
-    private Vector3 modernClosedPos;
-    private Vector3 retroClosedPos;
-    private Vector3 modernOpenPos;
-    private Vector3 retroOpenPos;
+    private float nextLockedTime;
+
+    private Vector3 closedLocalPos;
+    private Vector3 openLocalPos;
 
     private bool isOpen;
     private bool isMoving;
 
     private Collider doorCollider;
-
-    private StyleSwapManager styleSwapManager;
-    private StyleState currentStyle = StyleState.Modern;
 
     private void Awake()
     {
@@ -61,66 +53,52 @@ public class LockedDoor : MonoBehaviour, IInteractable
         else
         {
             sfxSource.playOnAwake = false;
-            sfxSource.spatialBlend = 1f; // 3D door sound
+            sfxSource.spatialBlend = 1f;
         }
 
-        if (modernVisual == null || retroVisual == null)
+        if (doorVisual == null)
         {
-            Debug.LogError("[LockedDoor] Assign modernVisual + retroVisual.", this);
+            Debug.LogError("[LockedDoor] Assign doorVisual.", this);
             enabled = false;
             return;
         }
 
-        modernClosedPos = modernVisual.position;
-        retroClosedPos = retroVisual.position;
-
-        modernOpenPos = modernClosedPos + Vector3.up * openHeight;
-        retroOpenPos = retroClosedPos + Vector3.up * openHeight;
-
-        styleSwapManager = FindFirstObjectByType<StyleSwapManager>();
+        closedLocalPos = doorVisual.localPosition;
+        RecalculateOpenPosition();
     }
 
-    private void OnEnable()
+    private void OnValidate()
     {
-        if (styleSwapEvent != null)
-            styleSwapEvent.OnStyleSwap += OnStyleChanged;
+        if (doorVisual == null)
+            return;
 
-        if (styleSwapManager != null)
-            OnStyleChanged(styleSwapManager.CurrentState);
+        closedLocalPos = doorVisual.localPosition;
+        RecalculateOpenPosition();
     }
 
-    private void OnDisable()
+    private void RecalculateOpenPosition()
     {
-        if (styleSwapEvent != null)
-            styleSwapEvent.OnStyleSwap -= OnStyleChanged;
-    }
-
-    private void OnStyleChanged(StyleState newState)
-    {
-        currentStyle = newState;
-
-        // If opened already, keep both visuals parked open so toggling style stays coherent.
-        if (isOpen)
-        {
-            modernVisual.position = modernOpenPos;
-            retroVisual.position = retroOpenPos;
-        }
+        openLocalPos = closedLocalPos + Vector3.up * openHeight;
     }
 
     public void Interact(GameObject interactor)
     {
-        if (isOpen || isMoving) return;
+        if (isOpen || isMoving)
+            return;
 
         PlayerCombatState state = interactor.GetComponent<PlayerCombatState>();
         if (state == null)
         {
-            if (verboseLogs) Debug.LogWarning("[LockedDoor] Interactor missing PlayerCombatState.", this);
+            if (verboseLogs)
+                Debug.LogWarning("[LockedDoor] Interactor missing PlayerCombatState.", this);
             return;
         }
 
         if (!HasRequiredKey(state))
         {
-            if (verboseLogs) Debug.Log($"[LockedDoor] Locked. Missing {requiredKey} key.", this);
+            if (verboseLogs)
+                Debug.Log($"[LockedDoor] Locked. Missing {requiredKey} key.", this);
+
             PlayLockedSfx();
             return;
         }
@@ -135,19 +113,18 @@ public class LockedDoor : MonoBehaviour, IInteractable
             case KeyType.Blue: return state.HasBlueKey;
             case KeyType.Yellow: return state.HasYellowKey;
             case KeyType.Red: return state.HasRedKey;
+            default: return false;
         }
-
-        return false;
     }
 
     private void Open()
     {
         PlayOpenSfx();
-        // Same rule (key required), different presentation per style.
-        if (currentStyle == StyleState.Retro)
+        RecalculateOpenPosition();
+
+        if (snapOpenInstantly)
         {
-            modernVisual.position = modernOpenPos;
-            retroVisual.position = retroOpenPos;
+            doorVisual.localPosition = openLocalPos;
             FinishOpen();
             return;
         }
@@ -157,16 +134,19 @@ public class LockedDoor : MonoBehaviour, IInteractable
 
     private void Update()
     {
-        if (!isMoving) return;
+        if (!isMoving)
+            return;
 
-        modernVisual.position = Vector3.MoveTowards(modernVisual.position, modernOpenPos, openSpeedModern * Time.deltaTime);
-        retroVisual.position = Vector3.MoveTowards(retroVisual.position, retroOpenPos, openSpeedModern * Time.deltaTime);
+        doorVisual.localPosition = Vector3.MoveTowards(
+            doorVisual.localPosition,
+            openLocalPos,
+            openSpeed * Time.deltaTime);
 
-        if ((modernVisual.position - modernOpenPos).sqrMagnitude <= 0.0001f)
+        bool reached = (doorVisual.localPosition - openLocalPos).sqrMagnitude <= 0.0001f;
+
+        if (reached)
         {
-            modernVisual.position = modernOpenPos;
-            retroVisual.position = retroOpenPos;
-
+            doorVisual.localPosition = openLocalPos;
             isMoving = false;
             FinishOpen();
         }
@@ -177,7 +157,6 @@ public class LockedDoor : MonoBehaviour, IInteractable
         isOpen = true;
         isMoving = false;
 
-        // Door stops blocking once opened.
         if (disableColliderOnOpen && doorCollider != null)
             doorCollider.enabled = false;
     }

@@ -5232,7 +5232,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.3
-  m_Speed: 3
+  m_Speed: 4
   m_Acceleration: 12
   avoidancePriority: 50
   m_AngularSpeed: 80
@@ -5296,7 +5296,7 @@ MonoBehaviour:
   health: {fileID: 7060542006589125585}
   animProxy: {fileID: 2831697344665845165}
   attackModuleBehaviour: {fileID: 6640040306213971789}
-  aggroRange: 60
+  aggroRange: 30
   stopDistance: 5.5
   distanceHysteresis: 1.5
   requireLineOfSight: 0
@@ -5327,9 +5327,9 @@ MonoBehaviour:
   - {fileID: 8300000, guid: efef837227b311b48918b0d13b6bd4e1, type: 3}
   shootVolume: 0.75
   shootPitchRange: {x: 0.98, y: 1.02}
-  attackRange: 7
-  fireCooldown: 1.8
-  projectileSpeed: 22
+  attackRange: 7.25
+  fireCooldown: 2
+  projectileSpeed: 35
   damage: 10
   aimHeightOffset: 1.2
   isShootingBool: isShooting

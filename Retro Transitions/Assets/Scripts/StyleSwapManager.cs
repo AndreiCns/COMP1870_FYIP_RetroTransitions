@@ -35,7 +35,7 @@ public class StyleSwapManager : MonoBehaviour
             return;
         }
 
-        // Best: assign in inspector. Fallback: find.
+        // Best: assign in inspector. Fallback: find once.
         if (gameAudio == null)
             gameAudio = FindFirstObjectByType<GameAudioManager>();
     }
@@ -67,17 +67,30 @@ public class StyleSwapManager : MonoBehaviour
 
     public void RequestStyleSwap(string reason)
     {
+        StyleState target =
+            currentState == StyleState.Modern
+            ? StyleState.Retro
+            : StyleState.Modern;
+
+        StartStyleChange(target, reason);
+    }
+
+    public void ForceStyle(StyleState target, string reason = "Force")
+    {
+        if (currentState == target)
+            return;
+
+        StartStyleChange(target, reason);
+    }
+
+    private void StartStyleChange(StyleState target, string reason)
+    {
         if (isTransitioning)
             return;
 
         if (transitionFX != null && transitionFX.IsPlaying)
             return;
 
-        StyleState target =
-            (currentState == StyleState.Modern)
-            ? StyleState.Retro
-            : StyleState.Modern;
-
         if (transitionFX == null || reason == "Initial")
         {
             ApplyStyle(target, reason);
@@ -87,35 +100,12 @@ public class StyleSwapManager : MonoBehaviour
         isTransitioning = true;
         pendingTarget = target;
 
+        // FX owns the timing, manager owns the actual state change.
         transitionFX.Play(
-    pendingTarget,
-    onMidpoint: () => { ApplyStyle(pendingTarget, reason); },
-    onComplete: () => { isTransitioning = false; }
-);
-    }
-
-    public void ForceStyle(StyleState target, string reason = "Force")
-    {
-        if (isTransitioning)
-            return;
-
-        if (currentState == target)
-            return;
-
-        if (transitionFX == null || reason == "Initial")
-        {
-            ApplyStyle(target, reason);
-            return;
-        }
-
-        isTransitioning = true;
-        pendingTarget = target;
-
-        transitionFX.Play(
-    pendingTarget,
-    onMidpoint: () => { ApplyStyle(pendingTarget, reason); },
-    onComplete: () => { isTransitioning = false; }
-);
+            pendingTarget,
+            onMidpoint: () => { ApplyStyle(pendingTarget, reason); },
+            onComplete: () => { isTransitioning = false; }
+        );
     }
 
     private void ApplyStyle(StyleState state, string reason)
@@ -127,12 +117,12 @@ public class StyleSwapManager : MonoBehaviour
 
         styleSwapEvent.Raise(currentState);
 
-        if (gameAudio != null)
-        {
-            if (currentState == StyleState.Modern)
-                gameAudio.PlayModern();
-            else
-                gameAudio.PlayRetro();
-        }
+        if (gameAudio == null)
+            return;
+
+        if (currentState == StyleState.Modern)
+            gameAudio.PlayModern();
+        else
+            gameAudio.PlayRetro();
     }
 }

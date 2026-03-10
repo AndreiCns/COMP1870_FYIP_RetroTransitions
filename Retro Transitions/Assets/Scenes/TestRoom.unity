@@ -203,6 +203,22 @@ PrefabInstance:
       propertyPath: duration
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 1973965283021239653, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
+      propertyPath: targetStyle
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1973965283021239653, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
+      propertyPath: styleSwapDelay
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1973965283021239653, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
+      propertyPath: styleSwapManager
+      value: 
+      objectReference: {fileID: 1857005474}
+    - target: {fileID: 1973965283021239653, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
+      propertyPath: triggerStyleSwap
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7252325641748161987, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -10723,6 +10739,18 @@ PrefabInstance:
     - target: {fileID: 1973965283021239653, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
       propertyPath: duration
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1973965283021239653, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
+      propertyPath: styleSwapDelay
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1973965283021239653, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
+      propertyPath: styleSwapManager
+      value: 
+      objectReference: {fileID: 1857005474}
+    - target: {fileID: 1973965283021239653, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
+      propertyPath: triggerStyleSwap
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7252325641748161987, guid: 1dded0b7f46a2634293eb16b7651f4d9, type: 3}
       propertyPath: m_Pivot.x

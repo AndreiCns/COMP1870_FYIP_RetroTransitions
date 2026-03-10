@@ -16,7 +16,14 @@ public class WorldPopupUI : MonoBehaviour
     [SerializeField] private bool useFade = true;
     [SerializeField] private float fadeDuration = 0.2f;
 
+    [Header("Trigger Rules")]
+    [SerializeField] private bool canRetrigger = true;
+
     private Coroutine currentRoutine;
+    private bool hasTriggered;
+
+    // Tracks whichever popup is currently visible
+    private static WorldPopupUI activePopup;
 
     private void Awake()
     {
@@ -41,10 +48,24 @@ public class WorldPopupUI : MonoBehaviour
         if (!enabled)
             return;
 
+        if (!canRetrigger && hasTriggered)
+            return;
+
+        if (activePopup != null && activePopup != this)
+            activePopup.ForceCloseFromOtherPopup();
+
+        activePopup = this;
+        hasTriggered = true;
+
         if (currentRoutine != null)
             StopCoroutine(currentRoutine);
 
         currentRoutine = StartCoroutine(ShowRoutine(message, duration));
+    }
+
+    public void ResetTriggerState()
+    {
+        hasTriggered = false;
     }
 
     public void HideImmediate()
@@ -57,6 +78,24 @@ public class WorldPopupUI : MonoBehaviour
 
         canvasGroup.alpha = 0f;
         canvasGroup.gameObject.SetActive(false);
+
+        if (activePopup == this)
+            activePopup = null;
+    }
+
+    private void ForceCloseFromOtherPopup()
+    {
+        if (currentRoutine != null)
+        {
+            StopCoroutine(currentRoutine);
+            currentRoutine = null;
+        }
+
+        canvasGroup.alpha = 0f;
+        canvasGroup.gameObject.SetActive(false);
+
+        if (activePopup == this)
+            activePopup = null;
     }
 
     private IEnumerator ShowRoutine(string message, float duration)
@@ -65,27 +104,22 @@ public class WorldPopupUI : MonoBehaviour
         canvasGroup.gameObject.SetActive(true);
 
         if (useFade)
-        {
             yield return FadeCanvas(canvasGroup.alpha, 1f);
-        }
         else
-        {
             canvasGroup.alpha = 1f;
-        }
 
         yield return new WaitForSeconds(duration);
 
         if (useFade)
-        {
             yield return FadeCanvas(canvasGroup.alpha, 0f);
-        }
         else
-        {
             canvasGroup.alpha = 0f;
-        }
 
         canvasGroup.gameObject.SetActive(false);
         currentRoutine = null;
+
+        if (activePopup == this)
+            activePopup = null;
     }
 
     private IEnumerator FadeCanvas(float from, float to)

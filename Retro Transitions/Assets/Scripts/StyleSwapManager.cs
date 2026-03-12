@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,7 +19,10 @@ public class StyleSwapManager : MonoBehaviour
     [Header("Transition FX (optional)")]
     [SerializeField] private StyleSwapTransitionFX transitionFX;
 
-    private StyleState currentState = StyleState.Modern;
+    [Header("Startup")]
+    [SerializeField] private StyleState initialState = StyleState.Retro;
+
+    private StyleState currentState;
     public StyleState CurrentState => currentState;
 
     private bool isTransitioning;
@@ -35,29 +37,25 @@ public class StyleSwapManager : MonoBehaviour
             return;
         }
 
-        // Best: assign in inspector. Fallback: find once.
         if (gameAudio == null)
             gameAudio = FindFirstObjectByType<GameAudioManager>();
+
+        currentState = initialState;
+
+        // Apply immediately so listeners don't render one frame in the wrong style.
+        ApplyStyle(currentState, "Initial");
     }
 
     private void OnEnable()
     {
         if (toggleStyleAction != null)
             toggleStyleAction.action.performed += OnTogglePressed;
-
-        StartCoroutine(RaiseInitialStyleNextFrame());
     }
 
     private void OnDisable()
     {
         if (toggleStyleAction != null)
             toggleStyleAction.action.performed -= OnTogglePressed;
-    }
-
-    private IEnumerator RaiseInitialStyleNextFrame()
-    {
-        yield return null;
-        ApplyStyle(currentState, "Initial");
     }
 
     private void OnTogglePressed(InputAction.CallbackContext ctx)
@@ -100,7 +98,6 @@ public class StyleSwapManager : MonoBehaviour
         isTransitioning = true;
         pendingTarget = target;
 
-        // FX owns the timing, manager owns the actual state change.
         transitionFX.Play(
             pendingTarget,
             onMidpoint: () => { ApplyStyle(pendingTarget, reason); },

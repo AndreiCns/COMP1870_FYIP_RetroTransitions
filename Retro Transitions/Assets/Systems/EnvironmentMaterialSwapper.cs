@@ -2,12 +2,29 @@ using UnityEngine;
 
 public class EnvironmentMaterialSwapper : MonoBehaviour
 {
+    [System.Serializable]
+    private struct MaterialSet
+    {
+        [SerializeField] private Material modernMaterial;
+        [SerializeField] private Material retroMaterial;
+
+        public Material GetMaterial(StyleState state)
+        {
+            return state == StyleState.Modern ? modernMaterial : retroMaterial;
+        }
+
+        public bool IsAssigned()
+        {
+            return modernMaterial != null && retroMaterial != null;
+        }
+    }
+
     [Header("Event")]
     [SerializeField] private StyleSwapEvent styleSwapEvent;
+    [SerializeField] private StyleSwapManager styleSwapManager;
 
     [Header("Materials")]
-    [SerializeField] private Material modernMaterial;
-    [SerializeField] private Material retroMaterial;
+    [SerializeField] private MaterialSet[] materialSlots;
 
     private Renderer rend;
 
@@ -15,29 +32,64 @@ public class EnvironmentMaterialSwapper : MonoBehaviour
     {
         // Cache once, no need to look it up every swap
         rend = GetComponent<Renderer>();
+
+        if (rend == null)
+        {
+            Debug.LogError($"[{name}] Missing Renderer.", this);
+            enabled = false;
+            return;
+        }
+
+        if (styleSwapEvent == null)
+        {
+            Debug.LogError($"[{name}] styleSwapEvent not assigned.", this);
+            enabled = false;
+            return;
+        }
+
+        if (styleSwapManager == null)
+        {
+            Debug.LogWarning($"[{name}] styleSwapManager not assigned. Current state won't be applied on enable.", this);
+        }
     }
 
     private void OnEnable()
     {
-        if (styleSwapEvent != null)
-            styleSwapEvent.OnStyleSwap += ApplyStyle;
-        else
-            Debug.LogWarning($"[{name}] styleSwapEvent not assigned.", this);
+        styleSwapEvent.OnStyleSwap += ApplyStyle;
+
+        if (styleSwapManager != null)
+            ApplyStyle(styleSwapManager.CurrentState);
     }
 
     private void OnDisable()
     {
-        if (styleSwapEvent != null)
-            styleSwapEvent.OnStyleSwap -= ApplyStyle;
+        styleSwapEvent.OnStyleSwap -= ApplyStyle;
     }
 
     private void ApplyStyle(StyleState state)
     {
-        if (rend == null) return;
+        if (rend == null || materialSlots == null || materialSlots.Length == 0)
+            return;
 
-        // Swap between pre-made style materials
-        rend.sharedMaterial = (state == StyleState.Modern)
-            ? modernMaterial
-            : retroMaterial;
+        Material[] sharedMats = rend.sharedMaterials;
+
+        if (sharedMats.Length != materialSlots.Length)
+        {
+            Debug.LogWarning(
+                $"[{name}] Material slot mismatch. Renderer has {sharedMats.Length}, swapper has {materialSlots.Length}.",
+                this);
+        }
+
+        int count = Mathf.Min(sharedMats.Length, materialSlots.Length);
+
+        for (int i = 0; i < count; i++)
+        {
+            if (!materialSlots[i].IsAssigned())
+                continue;
+
+            sharedMats[i] = materialSlots[i].GetMaterial(state);
+        }
+
+        rend.sharedMaterials = sharedMats;
     }
 }

@@ -3,7 +3,32 @@ guid: 7dd28949dc940a943934d053b8bb5bfc
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LvL1_Mat
+    second: {fileID: 2100000, guid: 546d70e8c59aeec48b2db369f528d8da, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: emissiveBlue
+    second: {fileID: 2100000, guid: e62fe165c38be9044a3e0c4474802e65, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: emissiveRed
+    second: {fileID: 2100000, guid: 383b65a305b4c514b8c0254942f152be, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: emissiveYellow
+    second: {fileID: 2100000, guid: 7b2b72ef0ef3e6d4d96894e45da984dc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: propsMat
+    second: {fileID: 2100000, guid: d65e4ca87340cb74cb5635721586d3d0, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

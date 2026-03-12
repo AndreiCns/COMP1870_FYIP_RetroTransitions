@@ -52,6 +52,7 @@ public class HUDStyleSwapListener : MonoBehaviour
 
     [Header("Event")]
     [SerializeField] private StyleSwapEvent styleSwapEvent;
+    [SerializeField] private StyleSwapManager styleSwapManager;
 
     [Header("Panel BG Swaps (per Image)")]
     [SerializeField] private ImageSwap[] panelBgSwaps;
@@ -79,7 +80,9 @@ public class HUDStyleSwapListener : MonoBehaviour
             return;
         }
 
-        // Face swap is optional, but if it exists we prefer a local reference.
+        if (styleSwapManager == null)
+            styleSwapManager = FindFirstObjectByType<StyleSwapManager>();
+
         if (faceController == null)
             faceController = GetComponentInChildren<HUDFaceController>(true);
     }
@@ -87,17 +90,14 @@ public class HUDStyleSwapListener : MonoBehaviour
     private void OnEnable()
     {
         styleSwapEvent.OnStyleSwap += OnStyleSwap;
+
+        if (styleSwapManager != null)
+            Apply(styleSwapManager.CurrentState);
     }
 
     private void OnDisable()
     {
         styleSwapEvent.OnStyleSwap -= OnStyleSwap;
-    }
-
-    private void Start()
-    {
-        // Sync visuals to the project’s default style at boot.
-        Apply(StyleState.Modern);
     }
 
     private void OnStyleSwap(StyleState state)
@@ -109,8 +109,6 @@ public class HUDStyleSwapListener : MonoBehaviour
     {
         ApplyPanelBgs(state);
         ApplyFonts(state);
-
-        // Face + crosshair are purely cosmetic; safe to skip if unassigned.
         faceSwap.Apply(state, faceController);
         ApplyCrosshair(state);
     }
